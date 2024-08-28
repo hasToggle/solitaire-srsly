@@ -35,8 +35,8 @@ export default function Home() {
             />
           ))}
         </div>
-        <div className="col-span-6 col-start-9 grid grid-cols-2">
-          <div className="mx-auto">
+        <div className="col-span-6 col-start-9 flex items-start justify-center gap-7">
+          <div className="mt-5">
             {leftStack.length ? (
               <Card
                 card={leftStack[leftStack.length - 1]}
@@ -44,10 +44,10 @@ export default function Home() {
                 className={"text-4xl"}
               />
             ) : (
-              <Stack />
+              <EmptySlot />
             )}
           </div>
-          <div>
+          <div className="">
             <Card card={rightStack[0]} onClick={handleDrawCard} />
           </div>
         </div>
