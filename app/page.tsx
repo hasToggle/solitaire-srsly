@@ -1,39 +1,80 @@
 "use client";
 
-import clsx from "clsx";
-import { Stack } from "./stack";
-import { useGameState } from "./selected-card-context";
+import { useGameState } from "./game-state-context";
+import EmptySlot from "@/components/empty-slot";
+import Stack from "@/components/stack";
+import Card from "@/components/card";
 
 export default function Home() {
-  const { cards, selectedCard } = useGameState();
+  const {
+    main: { cards: mainCards, handleSelection: handleMainSelection },
+    draw: {
+      cards: [leftStack, rightStack],
+      handleSelection: handleDrawSelection,
+    },
+    goal: { cards: goalCards, handleSelection: handleGoalSelection },
+    handleDrawCard,
+    handleGameReset,
+  } = useGameState();
 
   return (
-    <main className="flex min-h-screen flex-col items-center gap-28 p-24">
-      <div className="bg-white pt-4 w-24 h-36 border border-gray-200 rounded-lg shadow-md pb-20 flex items-center justify-center">
-        <p
-          className={clsx("text-4xl", {
-            "text-red-600":
-              selectedCard?.suit === "♥️" || selectedCard?.suit === "♦️",
-            "text-black":
-              selectedCard?.suit === "♠️" || selectedCard?.suit === "♣️",
-          })}
-        >
-          {selectedCard?.rank}
-          {selectedCard?.suit}
-        </p>
+    <main>
+      <div className="grid min-h-screen grid-cols-12 p-24">
+        <div className="col-span-6 col-start-2 grid grid-cols-4">
+          {goalCards.map((cardStack, cardIndex) => (
+            <Card
+              key={cardIndex}
+              card={cardStack[cardStack.length - 1]}
+              onClick={() =>
+                handleGoalSelection(
+                  cardIndex,
+                  Math.max(0, cardStack.length - 1),
+                )
+              }
+              className={"text-4xl"}
+            />
+          ))}
+        </div>
+        <div className="col-span-6 col-start-9 grid grid-cols-2">
+          <div className="mx-auto">
+            {leftStack.length ? (
+              <Card
+                card={leftStack[leftStack.length - 1]}
+                onClick={() => handleDrawSelection()}
+                className={"text-4xl"}
+              />
+            ) : (
+              <Stack />
+            )}
+          </div>
+          <div>
+            <Card card={rightStack[0]} onClick={handleDrawCard} />
+          </div>
+        </div>
+        <div className="col-span-6 col-start-3 grid grid-cols-7 gap-2">
+          {mainCards.map((cardStack, stackIndex) => (
+            <Stack key={stackIndex}>
+              {cardStack.length === 0 && (
+                <EmptySlot onClick={() => handleMainSelection(stackIndex, 0)} />
+              )}
+              {cardStack.map((card, cardIndex) => (
+                <Card
+                  card={card}
+                  key={cardIndex}
+                  onClick={() => handleMainSelection(stackIndex, cardIndex)}
+                  className={"items-baseline text-xl"}
+                />
+              ))}
+            </Stack>
+          ))}
+        </div>
       </div>
-      <div className="grid grid-cols-7 gap-4">
-        {cards.map((cardStack, cardIndex) => (
-          <Stack key={cardIndex} cards={cardStack} col={cardIndex} />
-        ))}
-        {/* {Array.from({ length: stacks }, (_, i) => i + 1).map(
-          (stackSize, stackIndex) => {
-            const stackCards = cards.slice(startIndex, startIndex + stackSize);
-            startIndex += stackSize;
-            return <Stack key={stackIndex} cards={stackCards} />;
-          }
-        )} */}
-      </div>
+      <button
+        className="absolute bottom-5 left-1/2 -ml-4 rounded-md border border-green-300 px-8 py-1.5 text-green-950"
+        onClick={handleGameReset}
+      >
+        Reset
+      </button>
     </main>
   );
 }

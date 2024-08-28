@@ -34,3 +34,13 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+
+## Core
+
+- [x] constants: draw, goal, main
+- [x] handleSelection: 3 functions each bound to arg of constants
+- [x] game state of ids
+- [x] getCardById
+- [x] Card type: id, suit, rank, faceUp, value (2-14), color (-1 / 1)
+- [x] isMoveValid: (source, target) => boolean
+- [x] selected(col, index) + slice selection in handleSelection
