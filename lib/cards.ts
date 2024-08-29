@@ -37,7 +37,7 @@ const createDeck = () => {
   let id = 1;
   for (const suit of suits) {
     for (const rank of ranks) {
-      deck.push({ id: id++, suit, rank: rank, faceUp: false });
+      deck.push({ id: id++, suit, rank });
     }
   }
   return deck as Card[];
