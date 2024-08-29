@@ -28,6 +28,7 @@ interface GameStateContext {
   draw: {
     cards: CardState[][];
     handleSelection: () => void;
+    handleSendToGoal: () => void;
   };
   goal: {
     cards: CardState[][];
@@ -36,6 +37,7 @@ interface GameStateContext {
   main: {
     cards: CardState[][];
     handleSelection: (column: number, row: number) => void;
+    handleSendToGoal: (column: number, row: number) => void;
   };
   selectedCard: CardActionState;
   getCard: (id: number | undefined) => Card | undefined;
@@ -74,12 +76,14 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   ) => {
     const selectedField = gameState[field];
     /* Always select the last card in the stack */
-    const selected = selectedField[column][selectedField[column].length - 1];
+    const selected = selectedField[column][row];
     if (selectedCard.state.length) {
       if (field === DRAW) {
         return resetSelectedCard();
       }
-      if (!isMoveValid(field, selectedCard.state[0], selected)) {
+      const lastOfStack =
+        selectedField[column][selectedField[column].length - 1];
+      if (!isMoveValid(field, selectedCard.state[0], lastOfStack)) {
         return resetSelectedCard();
       }
 
@@ -98,10 +102,12 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
 
       resetSelectedCard();
     } else {
+      //console.log("selected", selected);
       if (!selected || !selected.isFaceUp) {
         return;
       }
 
+      //const isFaceDown = !selected.isFaceUp;
       const updatedField = selectedField.map((cardStack, col) => {
         if (col === column) {
           return cardStack
@@ -123,6 +129,107 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
 
       const selectedCardStack = selectedField[column].slice(row);
       setSelectedCard({ state: selectedCardStack, action });
+    }
+  };
+
+  const handleSendToGoal = (
+    field: PlayingField,
+    column: number,
+    row: number,
+  ) => {
+    const selectedField = gameState[field];
+    const selected = selectedField[column][row];
+    if (
+      !selected ||
+      row !== selectedField[column].length - 1 ||
+      !selected.isFaceUp
+    ) {
+      return;
+    }
+
+    const card = getCard(selected.id);
+
+    if (!card) {
+      return;
+    }
+
+    const goalField = gameState[GOAL];
+
+    for (let i = 0; i < goalField.length; i++) {
+      const stack = goalField[i];
+      console.log("selected", card);
+      if (card.rank.value === 1) {
+        if (!stack.length) {
+          console.log("within stack", i + 1, stack);
+          //cut out the selected card
+          setGameState((prevFields) => ({
+            ...prevFields,
+            [field]: prevFields[field].map((cardStack, col) => {
+              if (col === column) {
+                return cardStack
+                  .slice(0, row)
+                  .map((card, index, args) =>
+                    index < args.length - 1
+                      ? card
+                      : { ...card, isFaceUp: true },
+                  );
+              } else {
+                return cardStack;
+              }
+            }),
+          }));
+          //add card to goal stack
+          setGameState((prevFields) => ({
+            ...prevFields,
+            [GOAL]: prevFields[GOAL].map((cardStack, col) => {
+              if (col === i) {
+                return cardStack.concat(selected);
+              }
+              return cardStack;
+            }),
+          }));
+          return;
+        }
+        continue;
+      }
+
+      const topCard = getCard(stack[stack.length - 1]?.id);
+
+      if (!topCard) {
+        continue;
+      }
+
+      if (
+        topCard.suit.display === card.suit.display &&
+        topCard.rank.value === card.rank.value - 1
+      ) {
+        //cut out the selected card
+        setGameState((prevFields) => ({
+          ...prevFields,
+          [field]: prevFields[field].map((cardStack, col) => {
+            if (col === column) {
+              return cardStack
+                .slice(0, row)
+                .map((card, index, args) =>
+                  index < args.length - 1 ? card : { ...card, isFaceUp: true },
+                );
+            } else {
+              return cardStack;
+            }
+          }),
+        }));
+        //add card to goal stack
+        setGameState((prevFields) => ({
+          ...prevFields,
+          [GOAL]: prevFields[GOAL].map((cardStack, col) => {
+            if (col === i) {
+              return cardStack.concat(selected);
+            }
+            return cardStack;
+          }),
+        }));
+        return;
+      }
     }
   };
 
@@ -244,6 +351,12 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
         0,
         gameState[DRAW][0].length - 1,
       ),
+      handleSendToGoal: handleSendToGoal.bind(
+        null,
+        DRAW,
+        0,
+        gameState[DRAW][0].length - 1,
+      ),
     },
     [GOAL]: {
       cards: gameState[GOAL],
@@ -252,6 +365,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     [MAIN]: {
       cards: gameState[MAIN],
       handleSelection: handleSelection.bind(null, MAIN),
+      handleSendToGoal: handleSendToGoal.bind(null, MAIN),
     },
   };
 

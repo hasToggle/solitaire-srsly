@@ -7,10 +7,15 @@ import Card from "@/components/card";
 
 export default function Home() {
   const {
-    main: { cards: mainCards, handleSelection: handleMainSelection },
+    main: {
+      cards: mainCards,
+      handleSelection: handleMainSelection,
+      handleSendToGoal: handleMainSendToGoal,
+    },
     draw: {
       cards: [leftStack, rightStack],
       handleSelection: handleDrawSelection,
+      handleSendToGoal: handleDrawSendToGoal,
     },
     goal: { cards: goalCards, handleSelection: handleGoalSelection },
     handleDrawCard,
@@ -41,6 +46,7 @@ export default function Home() {
               <Card
                 card={leftStack[leftStack.length - 1]}
                 onClick={() => handleDrawSelection()}
+                onDoubleClick={handleDrawSendToGoal}
                 className={"text-4xl"}
               />
             ) : (
@@ -62,6 +68,9 @@ export default function Home() {
                   card={card}
                   key={cardIndex}
                   onClick={() => handleMainSelection(stackIndex, cardIndex)}
+                  onDoubleClick={() =>
+                    handleMainSendToGoal(stackIndex, cardIndex)
+                  }
                   className={"items-baseline text-xl"}
                 />
               ))}

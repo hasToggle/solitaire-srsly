@@ -7,6 +7,7 @@ export default function Card({
   card,
   className,
   onClick,
+  onDoubleClick,
 }: { card?: CardState } & React.HTMLProps<HTMLParagraphElement>) {
   const { selectedCard, getCard } = useGameState();
   const cardToDisplay = getCard(card?.id);
@@ -22,7 +23,7 @@ export default function Card({
   return (
     <p
       className={clsx(
-        "flex h-36 w-24 select-none items-center justify-center rounded-lg border-4 border-gray-200 bg-white pb-12 shadow-md",
+        "flex h-36 w-24 select-none items-center justify-center rounded-lg border-4 border-gray-200 bg-gray-100 pb-12 shadow-md",
         className,
         {
           "text-red-600":
@@ -37,6 +38,7 @@ export default function Card({
         },
       )}
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
     >
       {cardToDisplay?.suit.display}
       {cardToDisplay?.rank.display}
@@ -47,7 +49,7 @@ export default function Card({
 export function CardBack(props: React.HTMLProps<HTMLParagraphElement>) {
   return (
     <p
-      className="flex h-36 w-24 select-none items-center justify-center rounded-lg border-4 border-gray-200 bg-white pb-12 shadow-md"
+      className="flex h-36 w-24 select-none items-center justify-center rounded-lg border-4 border-gray-200 bg-gray-100 pb-12 shadow-md"
       {...props}
     >
       <span className="text-7xl">🎴</span>
