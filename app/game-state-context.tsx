@@ -75,12 +75,12 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     row: number,
   ) => {
     const selectedField = gameState[field];
-    /* Always select the last card in the stack */
     const selected = selectedField[column][row];
     if (selectedCard.state.length) {
       if (field === DRAW) {
         return resetSelectedCard();
       }
+      /* Always select the last card in the stack */
       const lastOfStack =
         selectedField[column][selectedField[column].length - 1];
       if (!isMoveValid(field, selectedCard.state[0], lastOfStack)) {
@@ -102,28 +102,24 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
 
       resetSelectedCard();
     } else {
-      //console.log("selected", selected);
       if (!selected || !selected.isFaceUp) {
         return;
       }
 
-      //const isFaceDown = !selected.isFaceUp;
-      const updatedField = selectedField.map((cardStack, col) => {
-        if (col === column) {
-          return cardStack
-            .slice(0, row)
-            .map((card, index, args) =>
-              index < args.length - 1 ? card : { ...card, isFaceUp: true },
-            );
-        } else {
-          return cardStack;
-        }
-      });
-
       const action = () => {
         setGameState((prevFields) => ({
           ...prevFields,
-          [field]: updatedField,
+          [field]: prevFields[field].map((cardStack, col) => {
+            if (col === column) {
+              return cardStack
+                .slice(0, row)
+                .map((card, index, args) =>
+                  index < args.length - 1 ? card : { ...card, isFaceUp: true },
+                );
+            } else {
+              return cardStack;
+            }
+          }),
         }));
       };
 
@@ -157,37 +153,9 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
 
     for (let i = 0; i < goalField.length; i++) {
       const stack = goalField[i];
-      console.log("selected", card);
       if (card.rank.value === 1) {
         if (!stack.length) {
-          console.log("within stack", i + 1, stack);
-          //cut out the selected card
-          setGameState((prevFields) => ({
-            ...prevFields,
-            [field]: prevFields[field].map((cardStack, col) => {
-              if (col === column) {
-                return cardStack
-                  .slice(0, row)
-                  .map((card, index, args) =>
-                    index < args.length - 1
-                      ? card
-                      : { ...card, isFaceUp: true },
-                  );
-              } else {
-                return cardStack;
-              }
-            }),
-          }));
-          //add card to goal stack
-          setGameState((prevFields) => ({
-            ...prevFields,
-            [GOAL]: prevFields[GOAL].map((cardStack, col) => {
-              if (col === i) {
-                return cardStack.concat(selected);
-              }
-              return cardStack;
-            }),
-          }));
+          cutAndPaste(i);
           return;
         }
         continue;
@@ -203,33 +171,37 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
         topCard.suit.display === card.suit.display &&
         topCard.rank.value === card.rank.value - 1
       ) {
-        //cut out the selected card
-        setGameState((prevFields) => ({
-          ...prevFields,
-          [field]: prevFields[field].map((cardStack, col) => {
-            if (col === column) {
-              return cardStack
-                .slice(0, row)
-                .map((card, index, args) =>
-                  index < args.length - 1 ? card : { ...card, isFaceUp: true },
-                );
-            } else {
-              return cardStack;
-            }
-          }),
-        }));
-        //add card to goal stack
-        setGameState((prevFields) => ({
-          ...prevFields,
-          [GOAL]: prevFields[GOAL].map((cardStack, col) => {
-            if (col === i) {
-              return cardStack.concat(selected);
-            }
-            return cardStack;
-          }),
-        }));
+        cutAndPaste(i);
         return;
       }
+    }
+
+    function cutAndPaste(atIndex: number) {
+      // Remove the selected card
+      setGameState((prevFields) => ({
+        ...prevFields,
+        [field]: prevFields[field].map((cardStack, col) => {
+          if (col === column) {
+            return cardStack
+              .slice(0, row)
+              .map((card, index, args) =>
+                index < args.length - 1 ? card : { ...card, isFaceUp: true },
+              );
+          } else {
+            return cardStack;
+          }
+        }),
+      }));
+      // Add the selected card to the goal stack
+      setGameState((prevFields) => ({
+        ...prevFields,
+        [GOAL]: prevFields[GOAL].map((cardStack, col) => {
+          if (col === atIndex) {
+            return cardStack.concat(selected);
+          }
+          return cardStack;
+        }),
+      }));
     }
   };
 
