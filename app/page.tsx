@@ -83,7 +83,10 @@ export default function Home() {
         </div>
       </main>
       <footer className="relative z-50 flex justify-center gap-x-4 bg-black/[.09] p-4">
-        <button className="z-10 rounded-md border border-green-300 px-8 py-1.5 text-green-950 transition ease-in-out hover:bg-white">
+        <button
+          className="z-10 rounded-md border border-green-300 px-8 py-1.5 text-green-950 transition ease-in-out hover:bg-white"
+          onClick={() => console.log("rewind")}
+        >
           Rewind 🔙
         </button>
         <button
@@ -92,7 +95,10 @@ export default function Home() {
         >
           Reset Game 🚨
         </button>
-        <button className="rounded-md border border-green-300 px-8 py-1.5 text-green-950 transition ease-in-out hover:bg-white">
+        <button
+          className="rounded-md border border-green-300 px-8 py-1.5 text-green-950 transition ease-in-out hover:bg-white"
+          onClick={() => console.log("redo")}
+        >
           Redo 🔜
         </button>
       </footer>
