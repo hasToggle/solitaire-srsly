@@ -53,7 +53,7 @@ export default function Home() {
               <EmptySlot />
             )}
           </div>
-          <div className="">
+          <div>
             <Card card={rightStack[0]} onClick={handleDrawCard} />
           </div>
         </div>
