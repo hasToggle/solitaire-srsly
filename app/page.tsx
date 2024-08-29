@@ -82,8 +82,8 @@ export default function Home() {
           </div>
         </div>
       </main>
-      <footer className="flex justify-center gap-x-6 p-6">
-        <button className="rounded-md border border-green-300 px-8 py-1.5 text-green-950 transition ease-in-out hover:bg-white">
+      <footer className="relative z-50 flex justify-center gap-x-4 bg-black/[.09] p-4">
+        <button className="z-10 rounded-md border border-green-300 px-8 py-1.5 text-green-950 transition ease-in-out hover:bg-white">
           Rewind 🔙
         </button>
         <button
