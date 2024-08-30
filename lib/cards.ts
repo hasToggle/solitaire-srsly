@@ -1,11 +1,3 @@
-import {
-  type Card,
-  CardState,
-  DrawField,
-  GoalField,
-  MainField,
-} from "@/lib/types";
-
 const suits = [
   { display: "♠️", color: -1 },
   { display: "♥️", color: 1 },
@@ -28,57 +20,4 @@ const ranks = [
   { display: "K", value: 13 },
 ];
 
-const DRAW: DrawField = "draw";
-const GOAL: GoalField = "goal";
-const MAIN: MainField = "main";
-
-const createDeck = () => {
-  const deck = [];
-  let id = 1;
-  for (const suit of suits) {
-    for (const rank of ranks) {
-      deck.push({ id: id++, suit, rank });
-    }
-  }
-  return deck as Card[];
-};
-
-const shuffleDeck = (deck: number[]) => {
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
-  }
-  return deck;
-};
-
-const createInitialState = (deck: number[]) => {
-  const gameDeck: CardState[] = deck.map((id) => ({
-    id,
-    isFaceUp: false,
-  }));
-  const mainStacks: CardState[][] = [];
-  const totalStacks = 7;
-  let startIndex = 0;
-
-  for (let i = 1; i <= totalStacks; i++) {
-    mainStacks.push(gameDeck.slice(startIndex, startIndex + i));
-    startIndex += i;
-  }
-
-  return {
-    [DRAW]: [[], gameDeck.slice(startIndex)],
-    [GOAL]: Array.from({ length: 4 }, () => []),
-    [MAIN]: mainStacks,
-  };
-};
-
-export {
-  suits,
-  ranks,
-  DRAW,
-  GOAL,
-  MAIN,
-  createDeck,
-  shuffleDeck,
-  createInitialState,
-};
+export { suits, ranks };

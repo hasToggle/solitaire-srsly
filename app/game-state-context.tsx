@@ -19,10 +19,11 @@ import {
   createDeck,
   shuffleDeck,
   createInitialState,
+  isMoveValid,
   DRAW,
   GOAL,
   MAIN,
-} from "@/lib/cards";
+} from "@/lib/utils";
 
 interface GameStateContext {
   draw: {
@@ -74,56 +75,36 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     column: number,
     row: number,
   ) => {
-    const selectedField = gameState[field];
-    const selected = selectedField[column][row];
+    const selectedStack = gameState[field][column];
     if (selectedCard.state.length) {
       if (field === DRAW) {
         return resetSelectedCard();
       }
-      /* Always select the last card in the stack */
-      const lastOfStack =
-        selectedField[column][selectedField[column].length - 1];
-      if (!isMoveValid(field, selectedCard.state[0], lastOfStack)) {
+
+      const topCardOfStack = getCard(
+        selectedStack[selectedStack.length - 1]?.id,
+      );
+      const bottomCardOfSelection = getCard(selectedCard.state[0]?.id);
+
+      if (!isMoveValid(field, bottomCardOfSelection, topCardOfStack)) {
         return resetSelectedCard();
       }
 
       selectedCard.action();
 
-      /* Warning: You can't manipulate the current gameState here. You have to use the updater function! */
-      setGameState((prevFields) => ({
-        ...prevFields,
-        [field]: prevFields[field].map((cardStack, col) => {
-          if (col === column) {
-            return cardStack.concat(selectedCard.state);
-          }
-          return cardStack;
-        }),
-      }));
-
+      handlePaste(field, column, selectedCard.state);
       resetSelectedCard();
     } else {
-      if (!selected || !selected.isFaceUp) {
+      const selection = selectedStack[row];
+      if (!selection || !selection.isFaceUp) {
         return;
       }
 
       const action = () => {
-        setGameState((prevFields) => ({
-          ...prevFields,
-          [field]: prevFields[field].map((cardStack, col) => {
-            if (col === column) {
-              return cardStack
-                .slice(0, row)
-                .map((card, index, args) =>
-                  index < args.length - 1 ? card : { ...card, isFaceUp: true },
-                );
-            } else {
-              return cardStack;
-            }
-          }),
-        }));
+        handleCut(field, column, row);
       };
 
-      const selectedCardStack = selectedField[column].slice(row);
+      const selectedCardStack = selectedStack.slice(row);
       setSelectedCard({ state: selectedCardStack, action });
     }
   };
@@ -136,12 +117,8 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   ) => {
     const selectedField = gameState[field];
     const selected = selectedField[column][row];
-    /* TODO: allow stacks when sending to main */
-    if (
-      !selected ||
-      row !== selectedField[column].length - 1 ||
-      !selected.isFaceUp
-    ) {
+    resetSelectedCard();
+    if (!selected || !selected.isFaceUp) {
       return;
     }
 
@@ -151,134 +128,78 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    const didSend = sendToField(card, GOAL);
+    if (row !== selectedField[column].length - 1) {
+      sendToField(MAIN, card);
+      return;
+    }
+    const didSend = sendToField(GOAL, card);
     if (!didSend) {
-      sendToField(card, MAIN, true);
+      sendToField(MAIN, card);
+      return;
     }
 
-    function sendToField(
-      card: Card,
-      targetField: PlayingField,
-      invertLogic = false,
-    ) {
+    function sendToField(targetField: AllowedFieldsForMove, bottomCard: Card) {
       const stacks = gameState[targetField];
       for (let i = 0; i < stacks.length; i++) {
         const stack = stacks[i];
-        if (!invertLogic && card.rank.value === 1) {
-          if (!stack.length) {
-            return cutAndPaste(i);
-          }
-          continue;
-        }
-
         const topCard = getCard(stack[stack.length - 1]?.id);
-
-        if (!topCard) {
-          continue;
-        }
-
-        const isGoalFieldLogic =
-          topCard.suit.display === card.suit.display &&
-          topCard.rank.value === card.rank.value - 1;
-        const isMainFieldLogic =
-          topCard.suit.color !== card.suit.color &&
-          topCard.rank.value === card.rank.value + 1;
-
-        if (invertLogic ? isMainFieldLogic : isGoalFieldLogic) {
-          return cutAndPaste(i);
+        if (isMoveValid(targetField, bottomCard, topCard)) {
+          const selection = handleCut(field, column, row);
+          const didPaste = handlePaste(targetField, i, selection);
+          return didPaste;
         }
       }
-
-      function cutAndPaste(atIndex: number) {
-        // Remove the selected card
-        setGameState((prevFields) => ({
-          ...prevFields,
-          [field]: prevFields[field].map((cardStack, col) => {
-            if (col === column) {
-              return cardStack
-                .slice(0, row)
-                .map((card, index, args) =>
-                  index < args.length - 1 ? card : { ...card, isFaceUp: true },
-                );
-            } else {
-              return cardStack;
-            }
-          }),
-        }));
-        // Add the selected card to the goal stack
-        setGameState((prevFields) => ({
-          ...prevFields,
-          [targetField]: prevFields[targetField].map((cardStack, col) => {
-            if (col === atIndex) {
-              return cardStack.concat(selected);
-            }
-            return cardStack;
-          }),
-        }));
-        return true;
-      }
+      return false;
     }
   };
+
+  /* --- START ___Core Logic___ START --- */
+
+  /* Cut selection from stack */
+  const handleCut = (field: PlayingField, column: number, row: number) => {
+    let selection = gameState[field][column].slice(row);
+    setGameState((prevFields) => ({
+      ...prevFields,
+      [field]: prevFields[field].map((cardStack, col) => {
+        if (col === column) {
+          return cardStack
+            .slice(0, row)
+            .map((card, index, args) =>
+              index < args.length - 1 ? card : { ...card, isFaceUp: true },
+            );
+        } else {
+          return cardStack;
+        }
+      }),
+    }));
+    return selection;
+  };
+
+  /* Paste selection to stack */
+  const handlePaste = (
+    field: PlayingField,
+    column: number,
+    selection: CardState[],
+  ) => {
+    if (!selection?.length) {
+      return false;
+    }
+    setGameState((prevFields) => ({
+      ...prevFields,
+      [field]: prevFields[field].map((cardStack, col) => {
+        if (col === column) {
+          return cardStack.concat(selection);
+        }
+        return cardStack;
+      }),
+    }));
+    return true;
+  };
+  /* --- END ___Core Logic___ END --- */
 
   const getCard = (id: number | undefined) => {
     if (!id) return;
     return deck.find((card) => card.id === id);
-  };
-
-  const isMoveValid = (
-    field: AllowedFieldsForMove,
-    top: CardState,
-    bottom: CardState | undefined,
-  ) => {
-    const topCard = getCard(top?.id);
-    const bottomCard = getCard(bottom?.id);
-
-    if (!topCard) {
-      return false;
-    }
-
-    const isGoalMoveValid = () => {
-      // Moving to an empty spot: only an Ace can be moved
-      const isTopCardAce = topCard.rank.value === 1;
-      if (!bottomCard) return isTopCardAce;
-      //if (bottomCard && isTopCardAce) return false;
-
-      // Moving to a non-empty spot: check suit and rank
-      const isSameSuit = topCard.suit.display === bottomCard.suit.display;
-      const isRankOneMore = topCard.rank.value === bottomCard.rank.value + 1;
-
-      return isSameSuit && isRankOneMore;
-    };
-
-    const isMainMoveValid = () => {
-      // Moving to an empty spot: only a King can be moved
-      if (!bottomCard) {
-        return topCard.rank.value === 13;
-      }
-
-      // Moving to a spot with an Ace: only a King can be moved
-      const isBottomCardAce = bottomCard.rank.value === 1;
-      const isTopCardTwo = topCard.rank.value === 2;
-      const isTopCardAce = topCard.rank.value === 1;
-
-      if (isBottomCardAce) return isTopCardTwo;
-      if (bottomCard && isTopCardAce) return false;
-
-      // Moving to a non-empty spot: check rank and color
-      const isDifferentColor = topCard.suit.color !== bottomCard.suit.color;
-      const isRankOneLess = topCard.rank.value === bottomCard.rank.value - 1;
-
-      return isDifferentColor && isRankOneLess;
-    };
-
-    switch (field) {
-      case GOAL:
-        return isGoalMoveValid();
-      case MAIN:
-        return isMainMoveValid();
-      default:
-        return false;
-    }
   };
 
   const handleDrawCard = () => {
