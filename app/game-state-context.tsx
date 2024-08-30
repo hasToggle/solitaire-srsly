@@ -109,46 +109,44 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  /* TODO: rename */
-  const handleSendToGoal = (
-    field: PlayingField,
-    column: number,
-    row: number,
-  ) => {
-    const selectedField = gameState[field];
-    const selected = selectedField[column][row];
+  const moveSelection = (field: PlayingField, column: number, row: number) => {
     resetSelectedCard();
-    if (!selected || !selected.isFaceUp) {
+    const selectedField = gameState[field];
+    const selectedBottom = selectedField[column][row];
+
+    if (!selectedBottom || !selectedBottom.isFaceUp) {
       return;
     }
 
-    const card = getCard(selected.id);
+    const bottomCard = getCard(selectedBottom.id);
 
-    if (!card) {
+    if (!bottomCard) {
       return;
     }
 
     if (row !== selectedField[column].length - 1) {
-      sendToField(MAIN, card);
-      return;
-    }
-    const didSend = sendToField(GOAL, card);
-    if (!didSend) {
-      sendToField(MAIN, card);
+      moveToField(MAIN);
       return;
     }
 
-    function sendToField(targetField: AllowedFieldsForMove, bottomCard: Card) {
+    if (!moveToField(GOAL)) {
+      moveToField(MAIN);
+      return;
+    }
+
+    function moveToField(targetField: AllowedFieldsForMove) {
       const stacks = gameState[targetField];
       for (let i = 0; i < stacks.length; i++) {
         const stack = stacks[i];
         const topCard = getCard(stack[stack.length - 1]?.id);
+
         if (isMoveValid(targetField, bottomCard, topCard)) {
           const selection = handleCut(field, column, row);
           const didPaste = handlePaste(targetField, i, selection);
           return didPaste;
         }
       }
+
       return false;
     }
   };
@@ -259,7 +257,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
         0,
         gameState[DRAW][0].length - 1,
       ),
-      handleSendToGoal: handleSendToGoal.bind(
+      handleSendToGoal: moveSelection.bind(
         null,
         DRAW,
         0,
@@ -273,7 +271,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     [MAIN]: {
       cards: gameState[MAIN],
       handleSelection: handleSelection.bind(null, MAIN),
-      handleSendToGoal: handleSendToGoal.bind(null, MAIN),
+      handleSendToGoal: moveSelection.bind(null, MAIN),
     },
   };
 
