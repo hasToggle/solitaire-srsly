@@ -57,7 +57,7 @@ export default function Home() {
             <Card card={rightStack[0]} onClick={handleDrawCard} />
           </div>
         </div>
-        <div className="col-span-6 col-start-3 grid grid-cols-7 gap-2">
+        <div className="col-span-6 col-start-3 grid grid-cols-7 gap-28">
           {mainCards.map((cardStack, stackIndex) => (
             <Stack key={stackIndex}>
               {cardStack.length === 0 && (
