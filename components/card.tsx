@@ -23,7 +23,7 @@ export default function Card({
   return (
     <p
       className={clsx(
-        "flex h-36 w-24 select-none items-center justify-center rounded-lg border-4 border-gray-200 bg-gray-100 pb-12 shadow-md",
+        "flex h-56 w-36 select-none items-center justify-center rounded-lg border-4 border-gray-200 bg-gray-100 pb-12 shadow-md",
         className,
         {
           "text-red-600":
@@ -32,7 +32,7 @@ export default function Card({
           "text-black":
             cardToDisplay?.suit.display === "♠️" ||
             cardToDisplay?.suit.display === "♣️",
-          "border-sky-500": selectedCard.state?.some(
+          "border-slate-800": selectedCard.state?.some(
             (selected) => selected.id === cardToDisplay?.id,
           ),
         },
@@ -49,10 +49,10 @@ export default function Card({
 export function CardBack(props: React.HTMLProps<HTMLParagraphElement>) {
   return (
     <p
-      className="flex h-36 w-24 select-none items-center justify-center rounded-lg border-4 border-gray-200 bg-gray-100 pb-12 shadow-md"
+      className="my-auto flex h-56 w-36 select-none items-center justify-center rounded-lg border-4 border-sky-300 bg-sky-500 pb-1 shadow-md"
       {...props}
     >
-      <span className="text-7xl">🎴</span>
+      <span className="text-9xl">🎴</span>
     </p>
   );
 }
