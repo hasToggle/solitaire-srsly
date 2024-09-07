@@ -57,8 +57,11 @@ export default function Home() {
                 <EmptySlot />
               )}
             </div>
-            <div>
+            <div className="relative">
               <Card card={rightStack[0]} onClick={handleDrawCard} />
+              <span className="absolute bottom-1 left-1 w-9 rounded-md border border-sky-300 bg-sky-600 px-2 py-1 text-center text-sky-50">
+                {rightStack.length}
+              </span>
             </div>
           </div>
 
