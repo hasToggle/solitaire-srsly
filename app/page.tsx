@@ -20,6 +20,8 @@ export default function Home() {
     goal: { cards: goalCards, handleSelection: handleGoalSelection },
     handleDrawCard,
     handleGameReset,
+    handleUndo,
+    isHistoryEmpty,
   } = useGameState();
 
   return (
@@ -91,6 +93,14 @@ export default function Home() {
           onClick={handleGameReset}
         >
           New Deal 🆕
+        </button>
+
+        <button
+          className="bg-table/30 rounded-md border border-sky-300/50 px-8 py-1.5 text-white/80 transition ease-in-out hover:bg-white hover:text-sky-950"
+          onClick={handleUndo}
+          disabled={isHistoryEmpty}
+        >
+          Undo 🔙
         </button>
       </footer>
     </div>

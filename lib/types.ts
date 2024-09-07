@@ -41,5 +41,22 @@ export type GameState = {
 
 export type CardActionState = {
   state: CardState[];
-  action: () => void;
+  action: () => CardPosition | void;
+};
+
+export type CardPosition = {
+  field: PlayingField;
+  column: number;
+  row: number;
+};
+
+export type Transition = {
+  pos: CardPosition;
+  effect: (card: CardState[]) => CardState[];
+  transform: (stack: CardState[]) => CardState[];
+};
+
+export type CardMove = {
+  from: Transition;
+  to: Transition;
 };

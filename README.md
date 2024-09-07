@@ -44,3 +44,33 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 - [x] Card type: id, suit, rank, faceUp, value (2-14), color (-1 / 1)
 - [x] isMoveValid: (source, target) => boolean
 - [x] selected(col, index) + slice selection in handleSelection
+
+## Undo
+
+forward:
+
+- [ ] columns to columns (potential side effect: flip card)
+- [ ] columns to goal (potential side effect: flip card)
+
+- [ ] goal to goal
+- [ ] goal to columns
+
+- [ ] draw to columns
+- [ ] draw to goal
+- [ ] draw to draw
+  - [ ] right to left: (transform: flip card)
+  - [ ] left to right: (transform: flip all cards + reverse stack)
+
+backward:
+
+- [ ] columns to columns (potential side effect: flip card)
+- [ ] columns to draw
+- [ ] columns to goal
+
+- [ ] goal to columns (potential side effect: flip card)
+- [ ] goal to draw
+- [ ] goal to goal
+
+- [ ] draw to draw
+  - [ ] right to left: (transform: flip all cards + reverse stack)
+  - [ ] left to right: (transform: flip card)

@@ -10,19 +10,21 @@ import {
 import type {
   Card,
   CardState,
+  CardActionState,
   PlayingField,
   AllowedFieldsForMove,
+  CardPosition,
+  CardMove,
   GameState,
-  CardActionState,
 } from "@/lib/types";
 import {
-  createDeck,
-  shuffleDeck,
-  createInitialState,
-  isMoveValid,
   DRAW,
   GOAL,
   MAIN,
+  isMoveValid,
+  createDeck,
+  shuffleDeck,
+  createInitialState,
 } from "@/lib/utils";
 
 interface GameStateContext {
@@ -44,6 +46,8 @@ interface GameStateContext {
   getCard: (id: number | undefined) => Card | undefined;
   handleDrawCard: () => void;
   handleGameReset: () => void;
+  handleUndo: () => void;
+  isHistoryEmpty: boolean;
 }
 
 const GameStateContext = createContext<GameStateContext | undefined>(undefined);
@@ -51,14 +55,21 @@ const GameStateContext = createContext<GameStateContext | undefined>(undefined);
 const deck = createDeck();
 const ids = deck.map((card) => card.id);
 
+const getCard = (id: number | undefined) => {
+  if (!id) return;
+  return deck.find((card) => card.id === id);
+};
+
 export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   const [gameState, setGameState] = useState<GameState>(
     createInitialState(shuffleDeck(ids)),
   );
-  const [selectedCard, setSelectedCard] = useState<CardActionState>({
+  const [selected, setSelected] = useState<CardActionState>({
     state: [],
     action: () => {},
   });
+  const [history, setHistory] = useState<CardMove[]>([]);
+  const isHistoryEmpty = history.length === 0;
   //derived state for telling when a game is finished
   const cardsFaceDown = 0;
 
@@ -67,7 +78,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const resetSelectedCard = () => {
-    setSelectedCard({ state: [], action: () => {} });
+    setSelected({ state: [], action: () => {} });
   };
 
   const handleSelection = (
@@ -76,7 +87,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     row: number,
   ) => {
     const selectedStack = gameState[field][column];
-    if (selectedCard.state.length) {
+    if (selected.state.length) {
       if (field === DRAW) {
         return resetSelectedCard();
       }
@@ -84,15 +95,15 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       const topCardOfStack = getCard(
         selectedStack[selectedStack.length - 1]?.id,
       );
-      const bottomCardOfSelection = getCard(selectedCard.state[0]?.id);
+      const bottomCardOfSelection = getCard(selected.state[0]?.id);
 
       if (!isMoveValid(field, bottomCardOfSelection, topCardOfStack)) {
         return resetSelectedCard();
       }
 
-      selectedCard.action();
+      const CardPos = selected.action()!;
 
-      handlePaste(field, column, selectedCard.state);
+      handleMove(createCardMove([CardPos, { field, column, row }]));
       resetSelectedCard();
     } else {
       const selection = selectedStack[row];
@@ -100,19 +111,17 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      const action = () => {
-        handleCut(field, column, row);
-      };
+      const action = () => ({ field, column, row });
 
       const selectedCardStack = selectedStack.slice(row);
-      setSelectedCard({ state: selectedCardStack, action });
+      setSelected({ state: selectedCardStack, action });
     }
   };
 
   const moveSelection = (field: PlayingField, column: number, row: number) => {
     resetSelectedCard();
-    const selectedField = gameState[field];
-    const selectedBottom = selectedField[column][row];
+    const selectedStack = gameState[field][column];
+    const selectedBottom = selectedStack[row];
 
     if (!selectedBottom || !selectedBottom.isFaceUp) {
       return;
@@ -124,7 +133,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    if (row !== selectedField[column].length - 1) {
+    if (row !== selectedStack.length - 1) {
       moveToField(MAIN);
       return;
     }
@@ -141,9 +150,12 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
         const topCard = getCard(stack[stack.length - 1]?.id);
 
         if (isMoveValid(targetField, bottomCard, topCard)) {
-          const selection = handleCut(field, column, row);
-          const didPaste = handlePaste(targetField, i, selection);
-          return didPaste;
+          return handleMove(
+            createCardMove([
+              { field, column, row },
+              { field: targetField, column: i, row: stack.length },
+            ]),
+          );
         }
       }
 
@@ -151,53 +163,107 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  /* acts as a controller; accepts one or two CardPositions; generates CardMove */
+  const createCardMove = ([from, to]: CardPosition[]): CardMove => {
+    const { field, column, row } = from;
+    const isFaceUp = gameState[field][column][row - 1]?.isFaceUp;
+
+    const flipLastCard = (stack: CardState[]) => {
+      return stack.map((card, index, args) =>
+        index === args.length - 1 && !isFaceUp
+          ? { ...card, isFaceUp: !card.isFaceUp }
+          : card,
+      );
+    };
+
+    const flipAllCardsAndReverseStack = (stack: CardState[]) =>
+      stack.map((card) => ({ ...card, isFaceUp: !card.isFaceUp })).reverse();
+
+    const effect = (stack: CardState[]) =>
+      field === "main" ? flipLastCard(stack) : stack;
+
+    const { field: toField, column: toColumn } = to;
+
+    const transform = (stack: CardState[]) => {
+      if (toField === "draw" && toColumn === 0) {
+        return flipLastCard(stack);
+      }
+      if (toField === "draw" && toColumn === 1) {
+        return flipAllCardsAndReverseStack(stack);
+      }
+      return stack;
+    };
+
+    return {
+      from: {
+        pos: { field, column, row },
+        effect,
+        transform: (stack: CardState[]) => stack,
+      },
+      to: {
+        pos: {
+          field: toField,
+          column: toColumn,
+          row: gameState[toField][toColumn].length,
+        },
+        effect: (stack: CardState[]) => stack,
+        transform,
+      },
+    };
+  };
+
   /* --- START ___Core Logic___ START --- */
 
-  /* Cut selection from stack */
-  const handleCut = (field: PlayingField, column: number, row: number) => {
-    let selection = gameState[field][column].slice(row);
+  const handleMove = (cardMove: CardMove) => {
+    const { from } = cardMove;
+    const { field, column, row } = from.pos;
+
+    const selection = from.transform(gameState[field][column].slice(row));
+
     setGameState((prevFields) => ({
       ...prevFields,
       [field]: prevFields[field].map((cardStack, col) => {
         if (col === column) {
-          return cardStack
-            .slice(0, row)
-            .map((card, index, args) =>
-              index < args.length - 1 ? card : { ...card, isFaceUp: true },
-            );
+          return from.effect(cardStack.slice(0, row));
         } else {
           return cardStack;
         }
       }),
     }));
-    return selection;
-  };
 
-  /* Paste selection to stack */
-  const handlePaste = (
-    field: PlayingField,
-    column: number,
-    selection: CardState[],
-  ) => {
     if (!selection?.length) {
       return false;
     }
+
+    const { to } = cardMove;
+    const { field: toField, column: toColumn } = to.pos;
+
     setGameState((prevFields) => ({
       ...prevFields,
-      [field]: prevFields[field].map((cardStack, col) => {
-        if (col === column) {
-          return cardStack.concat(selection);
+      [toField]: prevFields[toField].map((cardStack, col) => {
+        if (col === toColumn) {
+          return to.effect(cardStack).concat(to.transform(selection));
         }
         return cardStack;
       }),
     }));
+
+    setHistory([...history, cardMove]);
+
     return true;
   };
+
   /* --- END ___Core Logic___ END --- */
 
-  const getCard = (id: number | undefined) => {
-    if (!id) return;
-    return deck.find((card) => card.id === id);
+  const handleUndo = () => {
+    const newHistory = history.slice();
+    const lastMove = newHistory.pop();
+    if (!lastMove) {
+      return;
+    }
+    const { from, to } = lastMove;
+    const successful = handleMove({ from: to, to: from });
+    if (successful) setHistory(newHistory);
   };
 
   const handleDrawCard = () => {
@@ -205,26 +271,30 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     const [leftStack, rightStack] = gameState[DRAW];
     if (!rightStack.length) {
       if (leftStack.length) {
-        let lastCard = leftStack[leftStack.length - 1];
-        lastCard = { ...lastCard, isFaceUp: false };
-        leftStack[leftStack.length - 1] = lastCard;
-        const reversedStack = leftStack.slice().reverse();
-        setGameState((prevFields) => ({
-          ...prevFields,
-          [DRAW]: [[], reversedStack],
-        }));
+        return handleMove(
+          createCardMove([
+            {
+              field: DRAW,
+              column: 0,
+              row: 0,
+            },
+            { field: DRAW, column: 1, row: 0 },
+          ]),
+        );
       }
       return;
     }
-    const updatedRightStack = rightStack.slice();
-    const topCard = updatedRightStack.pop();
-    const flippedTopCard = { ...topCard, isFaceUp: true } as CardState;
-    const updatedLeftStack = leftStack.slice();
-    updatedLeftStack.push(flippedTopCard);
-    setGameState((prevFields) => ({
-      ...prevFields,
-      [DRAW]: [updatedLeftStack, updatedRightStack],
-    }));
+
+    return handleMove(
+      createCardMove([
+        {
+          field: DRAW,
+          column: 1,
+          row: rightStack.length - 1,
+        },
+        { field: DRAW, column: 0, row: leftStack.length },
+      ]),
+    );
   };
 
   const handleGameStart = () => {
@@ -278,10 +348,12 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   return (
     <GameStateContext.Provider
       value={{
-        selectedCard,
+        selectedCard: selected,
         getCard,
         handleDrawCard,
         handleGameReset,
+        handleUndo,
+        isHistoryEmpty,
         ...playingField,
       }}
     >
