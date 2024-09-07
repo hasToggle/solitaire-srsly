@@ -4,6 +4,7 @@ import { useGameState } from "./game-state-context";
 import EmptySlot from "@/components/empty-slot";
 import Stack from "@/components/stack";
 import Card from "@/components/card";
+import Gametime from "@/components/game-time";
 
 export default function Home() {
   const {
@@ -22,6 +23,7 @@ export default function Home() {
     handleGameReset,
     handleUndo,
     isHistoryEmpty,
+    elapsedTime,
   } = useGameState();
 
   return (
@@ -32,6 +34,7 @@ export default function Home() {
             {goalCards.map((cardStack, cardIndex) => (
               <Card
                 key={cardIndex}
+                className={"text-4xl"}
                 card={cardStack[cardStack.length - 1]}
                 onClick={() =>
                   handleGoalSelection(
@@ -39,7 +42,6 @@ export default function Home() {
                     Math.max(0, cardStack.length - 1),
                   )
                 }
-                className={"text-4xl"}
               />
             ))}
           </div>
@@ -48,10 +50,10 @@ export default function Home() {
             <div className="mt-5">
               {leftStack.length ? (
                 <Card
+                  className={"text-4xl"}
                   card={leftStack[leftStack.length - 1]}
                   onClick={() => handleDrawSelection()}
                   onDoubleClick={handleDrawSendToGoal}
-                  className={"text-4xl"}
                 />
               ) : (
                 <EmptySlot />
@@ -75,13 +77,13 @@ export default function Home() {
                 )}
                 {cardStack.map((card, cardIndex) => (
                   <Card
-                    card={card}
                     key={cardIndex}
+                    card={card}
+                    className={"items-baseline text-2xl"}
                     onClick={() => handleMainSelection(stackIndex, cardIndex)}
                     onDoubleClick={() =>
                       handleMainSendToGoal(stackIndex, cardIndex)
                     }
-                    className={"items-baseline text-xl"}
                   />
                 ))}
               </Stack>
@@ -90,21 +92,24 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="absolute bottom-0 flex w-full justify-center gap-x-4 bg-black/10 p-4">
+      <footer className="absolute bottom-0 flex w-full justify-between gap-x-4 bg-black/10 p-4">
         <button
           className="bg-table/30 rounded-md border border-sky-300/50 px-8 py-1.5 text-white/80 transition ease-in-out hover:bg-white hover:text-sky-950"
           onClick={handleGameReset}
         >
           New Deal 🆕
         </button>
-
-        <button
-          className="bg-table/30 rounded-md border border-sky-300/50 px-8 py-1.5 text-white/80 transition ease-in-out hover:bg-white hover:text-sky-950"
-          onClick={handleUndo}
-          disabled={isHistoryEmpty}
-        >
-          Undo 🔙
-        </button>
+        <div className="flex items-center gap-6">
+          <Gametime elapsedTime={elapsedTime} />
+          <button
+            className="bg-table/30 rounded-md border border-sky-300/50 px-8 py-1.5 text-white/80 transition ease-in-out enabled:hover:bg-white enabled:hover:text-sky-950 disabled:border-sky-300/30 disabled:text-white/70"
+            onClick={handleUndo}
+            disabled={isHistoryEmpty}
+          >
+            Undo 🔙
+          </button>
+        </div>
+        <div></div>
       </footer>
     </div>
   );

@@ -8,7 +8,7 @@ export default function Stack({ children }: { children?: React.ReactNode }) {
         <div
           key={index}
           className="absolute"
-          style={{ top: `${index * 30}px` }}
+          style={{ top: `${index * 32}px` }}
         >
           {child}
         </div>

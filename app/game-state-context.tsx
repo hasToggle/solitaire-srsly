@@ -5,6 +5,7 @@ import {
   useContext,
   useState,
   useEffect,
+  useRef,
   type ReactNode,
 } from "react";
 import type {
@@ -48,6 +49,7 @@ interface GameStateContext {
   handleGameReset: () => void;
   handleUndo: () => void;
   isHistoryEmpty: boolean;
+  elapsedTime: number;
 }
 
 const GameStateContext = createContext<GameStateContext | undefined>(undefined);
@@ -69,13 +71,40 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     action: () => {},
   });
   const [history, setHistory] = useState<CardMove[]>([]);
+  const [startTime, setStartTime] = useState<number | null>(null);
   const isHistoryEmpty = history.length === 0;
+  const [elapsedTime, setElapsedTime] = useState(0);
+
   //derived state for telling when a game is finished
-  const cardsFaceDown = 0;
+  const isGameFinished = useRef(false);
+  isGameFinished.current = isEveryStackEmpty();
+
+  function isEveryStackEmpty() {
+    return [...gameState[MAIN], ...gameState[DRAW]].every(
+      (stack) => !stack.length,
+    );
+  }
 
   useEffect(() => {
     handleGameStart();
   }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (startTime) {
+        if (isGameFinished.current) {
+          return clearInterval(interval);
+        }
+        const currentTime = Date.now();
+        const elapsedTime = currentTime - startTime;
+        setElapsedTime(elapsedTime);
+      }
+    }, 1000);
+    return () => {
+      clearInterval(interval);
+      setElapsedTime(0);
+    };
+  }, [startTime]);
 
   const resetSelectedCard = () => {
     setSelected({ state: [], action: () => {} });
@@ -215,6 +244,8 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   /* --- START ___Core Logic___ START --- */
 
   const handleMove = (cardMove: CardMove) => {
+    if (!startTime) setStartTime(Date.now());
+
     const { from } = cardMove;
     const { field, column, row } = from.pos;
 
@@ -316,6 +347,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     setGameState(() => createInitialState(shuffleDeck(ids)));
     handleGameStart();
     resetSelectedCard();
+    setStartTime(null);
   };
 
   const playingField = {
@@ -354,6 +386,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
         handleGameReset,
         handleUndo,
         isHistoryEmpty,
+        elapsedTime,
         ...playingField,
       }}
     >
