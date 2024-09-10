@@ -2,15 +2,15 @@ import { suits, ranks } from "@/lib/cards";
 import {
   type Card,
   CardState,
-  DrawField,
-  GoalField,
-  MainField,
+  Stock,
+  Foundation,
+  Tableau,
   AllowedFieldsForMove,
 } from "@/lib/types";
 
-const DRAW: DrawField = "draw";
-const GOAL: GoalField = "goal";
-const MAIN: MainField = "main";
+const STOCK: Stock = "stock";
+const FOUNDATION: Foundation = "foundation";
+const TABLEAU: Tableau = "tableau";
 
 const createDeck = () => {
   const deck = [];
@@ -46,9 +46,9 @@ const createInitialState = (deck: number[]) => {
   }
 
   return {
-    [DRAW]: [[], gameDeck.slice(startIndex)],
-    [GOAL]: Array.from({ length: 4 }, () => []) as CardState[][],
-    [MAIN]: mainStacks,
+    [STOCK]: [[], gameDeck.slice(startIndex)],
+    [FOUNDATION]: Array.from({ length: 4 }, () => []) as CardState[][],
+    [TABLEAU]: mainStacks,
   };
 };
 
@@ -61,7 +61,7 @@ const isMoveValid = (
     return false;
   }
 
-  if (field === GOAL) {
+  if (field === FOUNDATION) {
     // Moving to an empty spot: only an Ace can be moved
     const isBottomCardAce = bottomCard.rank.value === 1;
     if (!topCard) return isBottomCardAce;
@@ -73,7 +73,7 @@ const isMoveValid = (
     return isSameSuit && isRankOneMore;
   }
 
-  if (field === MAIN) {
+  if (field === TABLEAU) {
     // Moving to an empty spot: only a King can be moved
     if (!topCard) {
       return bottomCard.rank.value === 13;
@@ -90,9 +90,9 @@ const isMoveValid = (
 };
 
 export {
-  DRAW,
-  GOAL,
-  MAIN,
+  STOCK,
+  FOUNDATION,
+  TABLEAU,
   createDeck,
   shuffleDeck,
   createInitialState,

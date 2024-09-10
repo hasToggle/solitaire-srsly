@@ -8,17 +8,20 @@ import Gametime from "@/components/game-time";
 
 export default function Home() {
   const {
-    main: {
-      cards: mainCards,
+    tableau: {
+      cards: tableauCards,
       handleSelection: handleMainSelection,
-      handleSendToGoal: handleMainSendToGoal,
+      handleSendToFoundation: handleMainSendToFoundation,
     },
-    draw: {
+    stock: {
       cards: [leftStack, rightStack],
       handleSelection: handleDrawSelection,
-      handleSendToGoal: handleDrawSendToGoal,
+      handleSendToFoundation: handleDrawSendToFoundation,
     },
-    goal: { cards: goalCards, handleSelection: handleGoalSelection },
+    foundation: {
+      cards: foundationCards,
+      handleSelection: handleFoundationSelection,
+    },
     handleDrawCard,
     handleGameReset,
     handleUndo,
@@ -33,13 +36,13 @@ export default function Home() {
       <main>
         <div className="grid grid-cols-12 gap-14 p-24">
           <div className="col-span-5 col-start-2 grid grid-cols-4 gap-16">
-            {goalCards.map((cardStack, cardIndex) => (
+            {foundationCards.map((cardStack, cardIndex) => (
               <Card
                 key={cardIndex}
                 className={"text-4xl"}
                 card={cardStack[cardStack.length - 1]}
                 onClick={() =>
-                  handleGoalSelection(
+                  handleFoundationSelection(
                     cardIndex,
                     Math.max(0, cardStack.length - 1),
                   )
@@ -55,7 +58,7 @@ export default function Home() {
                   className={"text-4xl"}
                   card={leftStack[leftStack.length - 1]}
                   onClick={() => handleDrawSelection()}
-                  onDoubleClick={handleDrawSendToGoal}
+                  onDoubleClick={handleDrawSendToFoundation}
                 />
               ) : (
                 <EmptySlot />
@@ -70,7 +73,7 @@ export default function Home() {
           </div>
 
           <div className="col-span-6 col-start-2 grid grid-cols-7 gap-40">
-            {mainCards.map((cardStack, stackIndex) => (
+            {tableauCards.map((cardStack, stackIndex) => (
               <Stack key={stackIndex}>
                 {cardStack.length === 0 && (
                   <EmptySlot
@@ -84,7 +87,7 @@ export default function Home() {
                     className={"items-baseline text-2xl"}
                     onClick={() => handleMainSelection(stackIndex, cardIndex)}
                     onDoubleClick={() =>
-                      handleMainSendToGoal(stackIndex, cardIndex)
+                      handleMainSendToFoundation(stackIndex, cardIndex)
                     }
                   />
                 ))}

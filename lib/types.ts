@@ -25,18 +25,18 @@ export type CardState = {
   isFaceUp: boolean;
 };
 
-export type DrawField = "draw";
+export type Stock = "stock";
 
-export type GoalField = "goal";
+export type Foundation = "foundation";
 
-export type MainField = "main";
+export type Tableau = "tableau";
 
-export type PlayingField = DrawField | GoalField | MainField;
+export type Board = Stock | Foundation | Tableau;
 
-export type AllowedFieldsForMove = GoalField | MainField;
+export type AllowedFieldsForMove = Foundation | Tableau;
 
 export type GameState = {
-  [key in PlayingField]: CardState[][];
+  [key in Board]: CardState[][];
 };
 
 export type CardActionState = {
@@ -45,7 +45,7 @@ export type CardActionState = {
 };
 
 export type CardPosition = {
-  field: PlayingField;
+  field: Board;
   column: number;
   row: number;
 };

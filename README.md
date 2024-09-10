@@ -37,7 +37,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 
 ## Core
 
-- [x] constants: draw, goal, main
+- [x] constants: stock, foundation, tableau
 - [x] handleSelection: 3 functions each bound to arg of constants
 - [x] game state of ids
 - [x] getCardById
@@ -49,28 +49,28 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 
 forward:
 
-- [ ] columns to columns (potential side effect: flip card)
-- [ ] columns to goal (potential side effect: flip card)
+- [ ] tableau to tableau (potential side effect: flip card)
+- [ ] tableau to foundation (potential side effect: flip card)
 
-- [ ] goal to goal
-- [ ] goal to columns
+- [ ] foundation to foundation
+- [ ] foundation to tableau
 
-- [ ] draw to columns
-- [ ] draw to goal
-- [ ] draw to draw
+- [ ] stock to tableau
+- [ ] stock to foundation
+- [ ] stock to stock
   - [ ] right to left: (transform: flip card)
   - [ ] left to right: (transform: flip all cards + reverse stack)
 
 backward:
 
-- [ ] columns to columns (potential side effect: flip card)
-- [ ] columns to draw
-- [ ] columns to goal
+- [ ] tableau to tableau (potential side effect: flip card)
+- [ ] tableau to stock
+- [ ] tableau to foundation
 
-- [ ] goal to columns (potential side effect: flip card)
-- [ ] goal to draw
-- [ ] goal to goal
+- [ ] foundation to tableau (potential side effect: flip card)
+- [ ] foundation to stock
+- [ ] foundation to foundation
 
-- [ ] draw to draw
+- [ ] stock to stock
   - [ ] right to left: (transform: flip all cards + reverse stack)
   - [ ] left to right: (transform: flip card)

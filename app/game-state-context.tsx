@@ -13,16 +13,16 @@ import type {
   Card,
   CardState,
   CardActionState,
-  PlayingField,
+  Board,
   AllowedFieldsForMove,
   CardPosition,
   CardMove,
   GameState,
 } from "@/lib/types";
 import {
-  DRAW,
-  GOAL,
-  MAIN,
+  STOCK,
+  FOUNDATION,
+  TABLEAU,
   isMoveValid,
   createDeck,
   shuffleDeck,
@@ -30,19 +30,19 @@ import {
 } from "@/lib/utils";
 
 interface GameStateContext {
-  draw: {
+  stock: {
     cards: CardState[][];
     handleSelection: () => void;
-    handleSendToGoal: () => void;
+    handleSendToFoundation: () => void;
   };
-  goal: {
+  foundation: {
     cards: CardState[][];
     handleSelection: (column: number, row: number) => void;
   };
-  main: {
+  tableau: {
     cards: CardState[][];
     handleSelection: (column: number, row: number) => void;
-    handleSendToGoal: (column: number, row: number) => void;
+    handleSendToFoundation: (column: number, row: number) => void;
   };
   selectedCard: CardActionState;
   getCard: (id: number | undefined) => Card | undefined;
@@ -85,7 +85,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   isGameFinished.current = isEveryStackEmpty();
 
   function isEveryStackEmpty() {
-    return [...gameState[MAIN], ...gameState[DRAW]].every(
+    return [...gameState[TABLEAU], ...gameState[STOCK]].every(
       (stack) => !stack.length,
     );
   }
@@ -111,49 +111,51 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [startTime]);
 
-  const checkCardsForGoalMove = useCallback((state: GameState) => {
-    const topGoalCards = state[GOAL].map((stack) =>
+  const checkCardsForFoundationMove = useCallback((state: GameState) => {
+    const topFoundationCards = state[FOUNDATION].map((stack) =>
       getCard(stack[stack.length - 1]?.id),
     ).filter(Boolean);
 
     const topBoardCards = [
-      ...state[MAIN].map((stack) =>
+      ...state[TABLEAU].map((stack) =>
         getCard(stack[stack.length - 1]?.id),
       ).filter(Boolean),
-      ...[getCard(state[DRAW][0].at(-1)?.id)].filter(Boolean),
+      ...[getCard(state[STOCK][0].at(-1)?.id)].filter(Boolean),
     ] as Card[];
 
     return topBoardCards.some((card) =>
-      topGoalCards.some((goalCard) => isMoveValid(GOAL, card, goalCard)),
+      topFoundationCards.some((foundationCard) =>
+        isMoveValid(FOUNDATION, card, foundationCard),
+      ),
     );
   }, []);
 
   useEffect(() => {
-    isAutoCompletePossible.current = checkCardsForGoalMove(gameState);
+    isAutoCompletePossible.current = checkCardsForFoundationMove(gameState);
   }, [gameState]);
 
-  /* this effect acts as a loop for sending cards to the goal field */
+  /* this effect acts as a loop for sending cards to the foundation field */
   useEffect(() => {
     const handleAutoMove = () => {
       if (runAutoMove && isAutoCompletePossible.current) {
-        if (gameState[DRAW][0].length) {
+        if (gameState[STOCK][0].length) {
           const from = {
-            field: DRAW,
+            field: STOCK,
             column: 0,
-            row: gameState[DRAW][0].length - 1,
+            row: gameState[STOCK][0].length - 1,
           };
-          moveToField(from, GOAL);
+          moveToField(from, FOUNDATION);
         }
 
-        mainCheck: for (let i = 0; i < gameState[MAIN].length; i++) {
-          const stack = gameState[MAIN][i];
+        tableauCheck: for (let i = 0; i < gameState[TABLEAU].length; i++) {
+          const stack = gameState[TABLEAU][i];
 
           if (!stack.length) {
-            continue mainCheck;
+            continue tableauCheck;
           }
 
-          const from = { field: MAIN, column: i, row: stack.length - 1 };
-          moveToField(from, GOAL);
+          const from = { field: TABLEAU, column: i, row: stack.length - 1 };
+          moveToField(from, FOUNDATION);
         }
       } else {
         return handleTriggerAutocomplete(false);
@@ -170,14 +172,10 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     setRunAutoMove(shouldAutoComplete);
   };
 
-  const handleSelection = (
-    field: PlayingField,
-    column: number,
-    row: number,
-  ) => {
+  const handleSelection = (field: Board, column: number, row: number) => {
     const selectedStack = gameState[field][column];
     if (selected.state.length) {
-      if (field === DRAW) {
+      if (field === STOCK) {
         return resetSelectedCard();
       }
 
@@ -207,18 +205,18 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const moveSelection = (field: PlayingField, column: number, row: number) => {
+  const moveSelection = (field: Board, column: number, row: number) => {
     resetSelectedCard();
 
     const from = { field, column, row };
 
     if (row !== gameState[field][column].length - 1) {
-      moveToField(from, MAIN);
+      moveToField(from, TABLEAU);
       return;
     }
 
-    if (!moveToField(from, GOAL)) {
-      moveToField(from, MAIN);
+    if (!moveToField(from, FOUNDATION)) {
+      moveToField(from, TABLEAU);
       return;
     }
   };
@@ -255,7 +253,6 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     return false;
   }
 
-  /* acts as a controller; accepts one or two CardPositions; generates CardMove */
   const createCardMove = ([from, to]: CardPosition[]): CardMove => {
     const { field, column, row } = from;
     const isFaceUp = gameState[field][column][row - 1]?.isFaceUp;
@@ -268,19 +265,19 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       );
     };
 
-    const flipAllCardsAndReverseStack = (stack: CardState[]) =>
-      stack.map((card) => ({ ...card, isFaceUp: !card.isFaceUp })).reverse();
-
     const effect = (stack: CardState[]) =>
-      field === "main" ? flipLastCard(stack) : stack;
+      field === TABLEAU ? flipLastCard(stack) : stack;
 
     const { field: toField, column: toColumn } = to;
 
+    const flipAllCardsAndReverseStack = (stack: CardState[]) =>
+      stack.map((card) => ({ ...card, isFaceUp: !card.isFaceUp })).reverse();
+
     const transform = (stack: CardState[]) => {
-      if (toField === "draw" && toColumn === 0) {
+      if (toField === STOCK && toColumn === 0) {
         return flipLastCard(stack);
       }
-      if (toField === "draw" && toColumn === 1) {
+      if (toField === STOCK && toColumn === 1) {
         return flipAllCardsAndReverseStack(stack);
       }
       return stack;
@@ -317,6 +314,8 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     if (!selection?.length) {
       return false;
     }
+
+    console.log(cardMove);
 
     setGameState((prevFields) => ({
       ...prevFields,
@@ -362,17 +361,17 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
 
   const handleDrawCard = () => {
     resetSelectedCard();
-    const [leftStack, rightStack] = gameState[DRAW];
+    const [leftStack, rightStack] = gameState[STOCK];
     if (!rightStack.length) {
       if (leftStack.length) {
         return handleMove(
           createCardMove([
             {
-              field: DRAW,
+              field: STOCK,
               column: 0,
               row: 0,
             },
-            { field: DRAW, column: 1, row: 0 },
+            { field: STOCK, column: 1, row: 0 },
           ]),
         );
       }
@@ -382,11 +381,11 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     return handleMove(
       createCardMove([
         {
-          field: DRAW,
+          field: STOCK,
           column: 1,
           row: rightStack.length - 1,
         },
-        { field: DRAW, column: 0, row: leftStack.length },
+        { field: STOCK, column: 0, row: leftStack.length },
       ]),
     );
   };
@@ -395,7 +394,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     const flipTopCards = setTimeout(() => {
       setGameState((prevFields) => ({
         ...prevFields,
-        [MAIN]: prevFields[MAIN].map((cardStack) => {
+        [TABLEAU]: prevFields[TABLEAU].map((cardStack) => {
           if (cardStack.length > 0) {
             cardStack[cardStack.length - 1].isFaceUp = true;
           }
@@ -414,29 +413,29 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const playingField = {
-    [DRAW]: {
-      cards: gameState[DRAW],
+    [STOCK]: {
+      cards: gameState[STOCK],
       handleSelection: handleSelection.bind(
         null,
-        DRAW,
+        STOCK,
         0,
-        gameState[DRAW][0].length - 1,
+        gameState[STOCK][0].length - 1,
       ),
-      handleSendToGoal: moveSelection.bind(
+      handleSendToFoundation: moveSelection.bind(
         null,
-        DRAW,
+        STOCK,
         0,
-        gameState[DRAW][0].length - 1,
+        gameState[STOCK][0].length - 1,
       ),
     },
-    [GOAL]: {
-      cards: gameState[GOAL],
-      handleSelection: handleSelection.bind(null, GOAL),
+    [FOUNDATION]: {
+      cards: gameState[FOUNDATION],
+      handleSelection: handleSelection.bind(null, FOUNDATION),
     },
-    [MAIN]: {
-      cards: gameState[MAIN],
-      handleSelection: handleSelection.bind(null, MAIN),
-      handleSendToGoal: moveSelection.bind(null, MAIN),
+    [TABLEAU]: {
+      cards: gameState[TABLEAU],
+      handleSelection: handleSelection.bind(null, TABLEAU),
+      handleSendToFoundation: moveSelection.bind(null, TABLEAU),
     },
   };
 
