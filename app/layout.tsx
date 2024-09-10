@@ -17,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-table`}>
+      <body className={`${inter.className} bg-gray-800`}>
         <GameStateProvider>{children}</GameStateProvider>
       </body>
     </html>

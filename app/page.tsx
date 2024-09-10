@@ -97,9 +97,9 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="absolute bottom-0 flex w-full justify-between gap-x-4 bg-black/10 p-4">
+      <footer className="absolute bottom-0 flex w-full justify-between gap-x-4 bg-black/30 p-4">
         <button
-          className="bg-table/30 rounded-md border border-sky-300/50 px-8 py-1.5 text-white/80 transition ease-in-out hover:bg-white hover:text-sky-950"
+          className="rounded-md border border-sky-700/80 bg-gray-800/70 px-8 py-1.5 text-white/80 transition ease-in-out hover:bg-sky-50 hover:text-sky-950"
           onClick={handleGameReset}
         >
           New Deal 🆕
@@ -107,14 +107,19 @@ export default function Home() {
         <div className="flex items-center gap-4">
           <Gametime elapsedTime={elapsedTime} />
           <button
-            className="bg-table/30 rounded-md border border-sky-300/50 px-8 py-1.5 text-white/80 transition ease-in-out enabled:hover:bg-white enabled:hover:text-sky-950 disabled:cursor-not-allowed disabled:border-sky-300/30 disabled:text-white/70"
+            className="group rounded-md border border-sky-700/80 bg-gray-800/70 px-8 py-1.5 text-white/80 transition ease-in-out enabled:hover:bg-sky-50 enabled:hover:text-sky-950 disabled:cursor-not-allowed disabled:border-sky-300/30 disabled:text-white/70"
             onClick={handleUndo}
             disabled={isHistoryEmpty}
           >
-            Undo 🔙
+            Undo{" "}
+            <span
+              className={`${!isHistoryEmpty && "invert"} group-hover:invert-0`}
+            >
+              🔙
+            </span>
           </button>
           <button
-            className="bg-table/30 rounded-md border border-sky-300/50 px-8 py-1.5 text-white/80 transition ease-in-out enabled:bg-white enabled:text-sky-950 enabled:hover:border-sky-500 disabled:cursor-not-allowed disabled:border-sky-300/30 disabled:text-white/70"
+            className="rounded-md border border-sky-700/80 bg-gray-800/70 px-8 py-1.5 text-white/80 transition ease-in-out enabled:bg-sky-50 enabled:text-sky-950 enabled:hover:border-sky-500 disabled:cursor-not-allowed disabled:border-sky-300/30 disabled:text-white/70"
             onClick={() => handleTriggerAutocomplete(true)}
             disabled={!isAutoCompletePossible}
           >
