@@ -77,8 +77,8 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [runAutoMove, setRunAutoMove] = useState(false);
+  const [isAutoCompletePossible, setIsAutoCompletePossible] = useState(false);
   const isGameFinished = useRef(false);
-  const isAutoCompletePossible = useRef(false);
 
   //derived states
   const isHistoryEmpty = history.length === 0;
@@ -131,13 +131,13 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    isAutoCompletePossible.current = checkCardsForFoundationMove(gameState);
+    setIsAutoCompletePossible(checkCardsForFoundationMove(gameState));
   }, [gameState]);
 
   /* this effect acts as a loop for sending cards to the foundation field */
   useEffect(() => {
     const handleAutoMove = () => {
-      if (runAutoMove && isAutoCompletePossible.current) {
+      if (runAutoMove && isAutoCompletePossible) {
         if (gameState[STOCK][0].length) {
           const from = {
             field: STOCK,
@@ -315,8 +315,6 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
 
-    console.log(cardMove);
-
     setGameState((prevFields) => ({
       ...prevFields,
       [field]: prevFields[field].map((cardStack, col) => {
@@ -449,7 +447,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
         handleUndo,
         handleTriggerAutocomplete,
         isHistoryEmpty,
-        isAutoCompletePossible: isAutoCompletePossible.current,
+        isAutoCompletePossible,
         elapsedTime,
         ...playingField,
       }}
