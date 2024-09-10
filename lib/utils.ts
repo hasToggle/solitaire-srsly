@@ -47,7 +47,7 @@ const createInitialState = (deck: number[]) => {
 
   return {
     [DRAW]: [[], gameDeck.slice(startIndex)],
-    [GOAL]: Array.from({ length: 4 }, () => []),
+    [GOAL]: Array.from({ length: 4 }, () => []) as CardState[][],
     [MAIN]: mainStacks,
   };
 };

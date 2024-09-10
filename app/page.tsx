@@ -22,7 +22,9 @@ export default function Home() {
     handleDrawCard,
     handleGameReset,
     handleUndo,
+    handleTriggerAutocomplete,
     isHistoryEmpty,
+    isAutoCompletePossible,
     elapsedTime,
   } = useGameState();
 
@@ -99,14 +101,21 @@ export default function Home() {
         >
           New Deal 🆕
         </button>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4">
           <Gametime elapsedTime={elapsedTime} />
           <button
-            className="bg-table/30 rounded-md border border-sky-300/50 px-8 py-1.5 text-white/80 transition ease-in-out enabled:hover:bg-white enabled:hover:text-sky-950 disabled:border-sky-300/30 disabled:text-white/70"
+            className="bg-table/30 rounded-md border border-sky-300/50 px-8 py-1.5 text-white/80 transition ease-in-out enabled:hover:bg-white enabled:hover:text-sky-950 disabled:cursor-not-allowed disabled:border-sky-300/30 disabled:text-white/70"
             onClick={handleUndo}
             disabled={isHistoryEmpty}
           >
             Undo 🔙
+          </button>
+          <button
+            className="bg-table/30 rounded-md border border-sky-300/50 px-8 py-1.5 text-white/80 transition ease-in-out enabled:bg-white enabled:text-sky-950 enabled:hover:border-sky-500 disabled:cursor-not-allowed disabled:border-sky-300/30 disabled:text-white/70"
+            onClick={() => handleTriggerAutocomplete(true)}
+            disabled={!isAutoCompletePossible}
+          >
+            Auto ⚡️
           </button>
         </div>
         <div></div>

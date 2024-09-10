@@ -6,6 +6,7 @@ import {
   useState,
   useEffect,
   useRef,
+  useCallback,
   type ReactNode,
 } from "react";
 import type {
@@ -48,7 +49,9 @@ interface GameStateContext {
   handleDrawCard: () => void;
   handleGameReset: () => void;
   handleUndo: () => void;
+  handleTriggerAutocomplete: (shouldAutoComplete: boolean) => void;
   isHistoryEmpty: boolean;
+  isAutoCompletePossible: boolean;
   elapsedTime: number;
 }
 
@@ -72,11 +75,13 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   });
   const [history, setHistory] = useState<CardMove[]>([]);
   const [startTime, setStartTime] = useState<number | null>(null);
-  const isHistoryEmpty = history.length === 0;
   const [elapsedTime, setElapsedTime] = useState(0);
-
-  //derived state for telling when a game is finished
+  const [runAutoMove, setRunAutoMove] = useState(false);
   const isGameFinished = useRef(false);
+  const isAutoCompletePossible = useRef(false);
+
+  //derived states
+  const isHistoryEmpty = history.length === 0;
   isGameFinished.current = isEveryStackEmpty();
 
   function isEveryStackEmpty() {
@@ -106,8 +111,63 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [startTime]);
 
+  const checkCardsForGoalMove = useCallback((state: GameState) => {
+    const topGoalCards = state[GOAL].map((stack) =>
+      getCard(stack[stack.length - 1]?.id),
+    ).filter(Boolean);
+
+    const topBoardCards = [
+      ...state[MAIN].map((stack) =>
+        getCard(stack[stack.length - 1]?.id),
+      ).filter(Boolean),
+      ...[getCard(state[DRAW][0].at(-1)?.id)].filter(Boolean),
+    ] as Card[];
+
+    return topBoardCards.some((card) =>
+      topGoalCards.some((goalCard) => isMoveValid(GOAL, card, goalCard)),
+    );
+  }, []);
+
+  useEffect(() => {
+    isAutoCompletePossible.current = checkCardsForGoalMove(gameState);
+  }, [gameState]);
+
+  /* this effect acts as a loop for sending cards to the goal field */
+  useEffect(() => {
+    const handleAutoMove = () => {
+      if (runAutoMove && isAutoCompletePossible.current) {
+        if (gameState[DRAW][0].length) {
+          const from = {
+            field: DRAW,
+            column: 0,
+            row: gameState[DRAW][0].length - 1,
+          };
+          moveToField(from, GOAL);
+        }
+
+        mainCheck: for (let i = 0; i < gameState[MAIN].length; i++) {
+          const stack = gameState[MAIN][i];
+
+          if (!stack.length) {
+            continue mainCheck;
+          }
+
+          const from = { field: MAIN, column: i, row: stack.length - 1 };
+          moveToField(from, GOAL);
+        }
+      } else {
+        return handleTriggerAutocomplete(false);
+      }
+    };
+    handleAutoMove();
+  }, [runAutoMove, gameState]);
+
   const resetSelectedCard = () => {
     setSelected({ state: [], action: () => {} });
+  };
+
+  const handleTriggerAutocomplete = (shouldAutoComplete: boolean) => {
+    setRunAutoMove(shouldAutoComplete);
   };
 
   const handleSelection = (
@@ -149,48 +209,51 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
 
   const moveSelection = (field: PlayingField, column: number, row: number) => {
     resetSelectedCard();
-    const selectedStack = gameState[field][column];
-    const selectedBottom = selectedStack[row];
+
+    const from = { field, column, row };
+
+    if (row !== gameState[field][column].length - 1) {
+      moveToField(from, MAIN);
+      return;
+    }
+
+    if (!moveToField(from, GOAL)) {
+      moveToField(from, MAIN);
+      return;
+    }
+  };
+
+  function moveToField(from: CardPosition, toField: AllowedFieldsForMove) {
+    const { field, column, row } = from;
+    const selectedBottom = gameState[field][column][row];
 
     if (!selectedBottom || !selectedBottom.isFaceUp) {
-      return;
+      return false;
     }
 
     const bottomCard = getCard(selectedBottom.id);
 
     if (!bottomCard) {
-      return;
-    }
-
-    if (row !== selectedStack.length - 1) {
-      moveToField(MAIN);
-      return;
-    }
-
-    if (!moveToField(GOAL)) {
-      moveToField(MAIN);
-      return;
-    }
-
-    function moveToField(targetField: AllowedFieldsForMove) {
-      const stacks = gameState[targetField];
-      for (let i = 0; i < stacks.length; i++) {
-        const stack = stacks[i];
-        const topCard = getCard(stack[stack.length - 1]?.id);
-
-        if (isMoveValid(targetField, bottomCard, topCard)) {
-          return handleMove(
-            createCardMove([
-              { field, column, row },
-              { field: targetField, column: i, row: stack.length },
-            ]),
-          );
-        }
-      }
-
       return false;
     }
-  };
+
+    const stacks = gameState[toField];
+    for (let i = 0; i < stacks.length; i++) {
+      const stack = stacks[i];
+      const topCard = getCard(stack[stack.length - 1]?.id);
+
+      if (isMoveValid(toField, bottomCard, topCard)) {
+        return handleMove(
+          createCardMove([
+            { field, column, row },
+            { field: toField, column: i, row: stack.length },
+          ]),
+        );
+      }
+    }
+
+    return false;
+  }
 
   /* acts as a controller; accepts one or two CardPositions; generates CardMove */
   const createCardMove = ([from, to]: CardPosition[]): CardMove => {
@@ -251,6 +314,10 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
 
     const selection = from.transform(gameState[field][column].slice(row));
 
+    if (!selection?.length) {
+      return false;
+    }
+
     setGameState((prevFields) => ({
       ...prevFields,
       [field]: prevFields[field].map((cardStack, col) => {
@@ -261,10 +328,6 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
         }
       }),
     }));
-
-    if (!selection?.length) {
-      return false;
-    }
 
     const { to } = cardMove;
     const { field: toField, column: toColumn } = to.pos;
@@ -279,7 +342,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       }),
     }));
 
-    setHistory([...history, cardMove]);
+    setHistory((prevHistory) => [...prevHistory, cardMove]);
 
     return true;
   };
@@ -385,7 +448,9 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
         handleDrawCard,
         handleGameReset,
         handleUndo,
+        handleTriggerAutocomplete,
         isHistoryEmpty,
+        isAutoCompletePossible: isAutoCompletePossible.current,
         elapsedTime,
         ...playingField,
       }}
