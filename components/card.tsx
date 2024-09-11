@@ -1,3 +1,5 @@
+"use client";
+
 import clsx from "clsx";
 import { useGameState } from "@/app/game-state-context";
 import type { CardState } from "@/lib/types";
