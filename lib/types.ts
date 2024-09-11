@@ -60,3 +60,29 @@ export type CardMove = {
   from: Transition;
   to: Transition;
 };
+
+export type GameStateContext = {
+  stock: {
+    cards: CardState[][];
+    handleSelection: () => void;
+    handleSendToFoundation: () => void;
+  };
+  foundation: {
+    cards: CardState[][];
+    handleSelection: (column: number, row: number) => void;
+  };
+  tableau: {
+    cards: CardState[][];
+    handleSelection: (column: number, row: number) => void;
+    handleSendToFoundation: (column: number, row: number) => void;
+  };
+  selectedCard: CardActionState;
+  getCard: (id: number | undefined) => Card | undefined;
+  handleDrawCard: () => void;
+  handleNewDeal: () => void;
+  handleUndo: () => void;
+  handleTriggerAutocomplete: (shouldAutoComplete: boolean) => void;
+  isHistoryEmpty: boolean;
+  isAutoCompletePossible: boolean;
+  elapsedTime: number;
+};

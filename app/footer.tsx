@@ -6,7 +6,7 @@ import Button from "@/components/button";
 
 export default function Footer() {
   const {
-    handleGameReset,
+    handleNewDeal,
     handleUndo,
     handleTriggerAutocomplete,
     isHistoryEmpty,
@@ -16,7 +16,7 @@ export default function Footer() {
     <footer className="absolute bottom-0 flex w-full justify-between gap-x-4 bg-black/30 p-4">
       <Button
         className="hover:bg-sky-50 hover:text-sky-950"
-        onClick={handleGameReset}
+        onClick={handleNewDeal}
       >
         New Deal 🆕
       </Button>
