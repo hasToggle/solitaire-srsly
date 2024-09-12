@@ -20,7 +20,7 @@ export default function Stock() {
           <Card
             className={"text-4xl"}
             card={leftStack[leftStack.length - 1]}
-            onClick={() => handleSelection()}
+            onClick={handleSelection}
             onDoubleClick={handleSendToFoundation}
           />
         ) : (

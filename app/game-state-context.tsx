@@ -284,18 +284,14 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   /* Selects card(s) if none are selected; Moves card(s) if already selected and the rules allow it. */
   const handleSelection = (field: Board, column: number, row: number) => {
     const selectedStack = gameState[field][column];
-    if (selected.state.length) {
-      if (field === STOCK) {
-        return resetSelectedCard();
-      }
-
+    if (selected.state.length && field !== STOCK) {
       const topCardOfStack = getCard(
         selectedStack[selectedStack.length - 1]?.id,
       );
       const bottomCardOfSelection = getCard(selected.state[0]?.id);
 
       if (!isMoveValid(field, bottomCardOfSelection, topCardOfStack)) {
-        return resetSelectedCard();
+        return setSelection();
       }
 
       const CardPos = selected.action()!;
@@ -303,6 +299,10 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       handleMove(createCardMove([CardPos, { field, column, row }]));
       resetSelectedCard();
     } else {
+      setSelection();
+    }
+
+    function setSelection() {
       const selection = selectedStack[row];
       if (!selection || !selection.isFaceUp) {
         return;
