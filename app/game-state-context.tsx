@@ -29,6 +29,7 @@ import {
   shuffleDeck,
   createInitialState,
 } from "@/lib/utils";
+import { saveCompletedGame } from "./action";
 
 const GameStateContext = createContext<GameStateContext | undefined>(undefined);
 
@@ -204,12 +205,44 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     handleGameStart();
   }, []);
 
+  const handleSaveCompletedGame = useCallback(() => {
+    const cleanGameState: Partial<GameState> = {
+      stock: [...gameState.stock],
+      tableau: [...gameState.tableau],
+    };
+    cleanGameState[STOCK] = cleanGameState[STOCK]!.map((stack) =>
+      stack.map((card) => ({ id: card.id }) as CardState),
+    );
+    cleanGameState[TABLEAU] = cleanGameState[TABLEAU]!.map((stack) =>
+      stack.map((card) => ({ id: card.id }) as CardState),
+    );
+    const cleanHistory = history.map((move) => ({
+      from: {
+        pos: {
+          field: move.from.pos.field,
+          column: move.from.pos.column,
+          row: move.from.pos.row,
+        },
+      },
+      to: {
+        pos: {
+          field: move.to.pos.field,
+          column: move.to.pos.column,
+          row: move.to.pos.row,
+        },
+      },
+    }));
+    saveCompletedGame(cleanGameState, cleanHistory);
+  }, [gameState, history]);
+
   /* Starts a 1-second interval on the current game. */
   useEffect(() => {
     const interval = setInterval(() => {
       if (startTime) {
         if (isGameFinished.current) {
-          return clearInterval(interval);
+          clearInterval(interval);
+          handleSaveCompletedGame();
+          return;
         }
         const currentTime = Date.now();
         const elapsedTime = currentTime - startTime;
@@ -220,7 +253,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       clearInterval(interval);
       setElapsedTime(0);
     };
-  }, [startTime]);
+  }, [startTime, handleSaveCompletedGame]);
 
   /* Checks if it is possible to send any card(s) to the foundation. */
   useEffect(() => {
