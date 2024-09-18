@@ -55,6 +55,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [runAutoMove, setRunAutoMove] = useState(false);
   const [isAutoCompletePossible, setIsAutoCompletePossible] = useState(false);
+  const [moves, setMoves] = useState(0);
   const isGameFinished = useRef(false);
   const hasSavedGame = useRef(false);
 
@@ -206,36 +207,6 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     handleGameStart();
   }, []);
 
-  const handleSaveCompletedGame = useCallback(async () => {
-    const cleanGameState: Partial<GameState> = {
-      stock: [...gameState.stock],
-      tableau: [...gameState.tableau],
-    };
-    cleanGameState[STOCK] = cleanGameState[STOCK]!.map((stack) =>
-      stack.map((card) => ({ id: card.id }) as CardState),
-    );
-    cleanGameState[TABLEAU] = cleanGameState[TABLEAU]!.map((stack) =>
-      stack.map((card) => ({ id: card.id }) as CardState),
-    );
-    const cleanHistory = history.map((move) => ({
-      from: {
-        pos: {
-          field: move.from.pos.field,
-          column: move.from.pos.column,
-          row: move.from.pos.row,
-        },
-      },
-      to: {
-        pos: {
-          field: move.to.pos.field,
-          column: move.to.pos.column,
-          row: move.to.pos.row,
-        },
-      },
-    }));
-    await saveCompletedGame(cleanGameState, cleanHistory);
-  }, [gameState, history]);
-
   /* Starts a 1-second interval on the current game. */
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -284,12 +255,12 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
             },
           },
         }));
-        await saveCompletedGame(cleanGameState, cleanHistory);
+        await saveCompletedGame(cleanGameState, cleanHistory, moves);
       };
       handleSaveCompletedGame();
       hasSavedGame.current = true;
     }
-  }, [gameState.stock, gameState.tableau, history]);
+  }, [gameState.stock, gameState.tableau, history, moves]);
 
   /* Checks if it is possible to send any card(s) to the foundation. */
   useEffect(() => {
@@ -366,6 +337,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       const CardPos = selected.action()!;
 
       handleMove(createCardMove([CardPos, { field, column, row }]));
+      setMoves((prevMoves) => prevMoves + 1);
       resetSelectedCard();
     } else {
       setSelection();
@@ -392,11 +364,13 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
 
     if (row !== gameState[field][column].length - 1) {
       moveToField(from, TABLEAU);
+      setMoves((prevMoves) => prevMoves + 1);
       return;
     }
 
     if (!moveToField(from, FOUNDATION)) {
       moveToField(from, TABLEAU);
+      setMoves((prevMoves) => prevMoves + 1);
       return;
     }
   };
@@ -410,7 +384,10 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     }
     const { from, to } = lastMove;
     const successful = handleMove({ from: to, to: from });
-    if (successful) setHistory(newHistory);
+    if (successful) {
+      setHistory(newHistory);
+      setMoves((prevMoves) => prevMoves - 1);
+    }
   };
 
   /* Draws the next card from the stock or else reverses the stock pile to draw from again. */
