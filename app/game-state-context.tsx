@@ -493,7 +493,9 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
         },
       },
     }));
+    console.log("Do you SEE THIS?");
     await saveCompletedGame(cleanGameState, cleanHistory);
+    console.log("Did you get HERE?");
   };
 
   /* Object for easy consumption of custom-tailored functions. */

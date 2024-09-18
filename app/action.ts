@@ -4,8 +4,8 @@ import dbConnect from "@/db/dbConnect";
 import Winnable from "@/db/models/winnable";
 
 export async function saveCompletedGame(gameState: any, history: any) {
-  await dbConnect();
   console.log("Entering");
+  await dbConnect();
   const game = new Winnable({
     gameState,
     history,
