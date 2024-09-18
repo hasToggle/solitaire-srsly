@@ -82,6 +82,7 @@ export type GameStateContext = {
   handleNewDeal: () => void;
   handleUndo: () => void;
   handleTriggerAutocomplete: (shouldAutoComplete: boolean) => void;
+  testing_handleSaveCompletedGame: () => void;
   isHistoryEmpty: boolean;
   isAutoCompletePossible: boolean;
   elapsedTime: number;

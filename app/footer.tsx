@@ -9,6 +9,7 @@ export default function Footer() {
     handleNewDeal,
     handleUndo,
     handleTriggerAutocomplete,
+    testing_handleSaveCompletedGame,
     isHistoryEmpty,
     isAutoCompletePossible,
   } = useGameState();
@@ -42,7 +43,14 @@ export default function Footer() {
           Auto ⚡️
         </Button>
       </div>
-      <div></div>
+      <div>
+        <Button
+          className="hover:bg-sky-50 hover:text-sky-950"
+          formAction={testing_handleSaveCompletedGame}
+        >
+          Save
+        </Button>
+      </div>
     </footer>
   );
 }
