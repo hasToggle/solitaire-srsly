@@ -258,10 +258,38 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   /* Saves the completed game. */
   useEffect(() => {
     if (isGameFinished.current && !hasSavedGame.current) {
+      const handleSaveCompletedGame = async () => {
+        const cleanGameState: {
+          stock: CardState[][] | number[][];
+          tableau: CardState[][] | number[][];
+        } = {
+          [STOCK]: gameState.stock.map((stack) => stack.map((card) => card.id)),
+          [TABLEAU]: gameState.tableau.map((stack) =>
+            stack.map((card) => card.id),
+          ),
+        };
+        const cleanHistory = history.map((move) => ({
+          from: {
+            pos: {
+              field: move.from.pos.field,
+              column: move.from.pos.column,
+              row: move.from.pos.row,
+            },
+          },
+          to: {
+            pos: {
+              field: move.to.pos.field,
+              column: move.to.pos.column,
+              row: move.to.pos.row,
+            },
+          },
+        }));
+        await saveCompletedGame(cleanGameState, cleanHistory);
+      };
       handleSaveCompletedGame();
       hasSavedGame.current = true;
     }
-  }, [handleSaveCompletedGame]);
+  }, [gameState.stock, gameState.tableau, history]);
 
   /* Checks if it is possible to send any card(s) to the foundation. */
   useEffect(() => {
