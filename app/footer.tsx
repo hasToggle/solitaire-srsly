@@ -46,7 +46,7 @@ export default function Footer() {
       <div>
         <Button
           className="hover:bg-sky-50 hover:text-sky-950"
-          formAction={testing_handleSaveCompletedGame}
+          onClick={testing_handleSaveCompletedGame}
         >
           Save
         </Button>
