@@ -469,35 +469,6 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     setStartTime(null);
   };
 
-  const testing_handleSaveCompletedGame = async () => {
-    const cleanGameState: {
-      stock: CardState[][] | number[][];
-      tableau: CardState[][] | number[][];
-    } = {
-      [STOCK]: gameState.stock.map((stack) => stack.map((card) => card.id)),
-      [TABLEAU]: gameState.tableau.map((stack) => stack.map((card) => card.id)),
-    };
-    const cleanHistory = history.map((move) => ({
-      from: {
-        pos: {
-          field: move.from.pos.field,
-          column: move.from.pos.column,
-          row: move.from.pos.row,
-        },
-      },
-      to: {
-        pos: {
-          field: move.to.pos.field,
-          column: move.to.pos.column,
-          row: move.to.pos.row,
-        },
-      },
-    }));
-    console.log("Do you SEE THIS?");
-    await saveCompletedGame(cleanGameState, cleanHistory);
-    console.log("Did you get HERE?");
-  };
-
   /* Object for easy consumption of custom-tailored functions. */
   const playingField = {
     [STOCK]: {
@@ -535,7 +506,6 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
         handleNewDeal,
         handleUndo,
         handleTriggerAutocomplete,
-        testing_handleSaveCompletedGame,
         isHistoryEmpty,
         isAutoCompletePossible,
         elapsedTime,
