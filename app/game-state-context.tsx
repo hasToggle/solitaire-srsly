@@ -205,7 +205,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     handleGameStart();
   }, []);
 
-  const handleSaveCompletedGame = useCallback(() => {
+  const handleSaveCompletedGame = useCallback(async () => {
     const cleanGameState: Partial<GameState> = {
       stock: [...gameState.stock],
       tableau: [...gameState.tableau],
@@ -232,7 +232,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
         },
       },
     }));
-    saveCompletedGame(cleanGameState, cleanHistory);
+    await saveCompletedGame(cleanGameState, cleanHistory);
   }, [gameState, history]);
 
   /* Starts a 1-second interval on the current game. */
