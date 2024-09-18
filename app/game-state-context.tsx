@@ -56,6 +56,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   const [runAutoMove, setRunAutoMove] = useState(false);
   const [isAutoCompletePossible, setIsAutoCompletePossible] = useState(false);
   const isGameFinished = useRef(false);
+  const hasSavedGame = useRef(false);
 
   // derived states
   const isHistoryEmpty = history.length === 0;
@@ -237,23 +238,30 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
 
   /* Starts a 1-second interval on the current game. */
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (startTime) {
+    let interval: NodeJS.Timeout;
+    if (startTime) {
+      interval = setInterval(() => {
         if (isGameFinished.current) {
-          clearInterval(interval);
-          handleSaveCompletedGame();
-          return;
+          return clearInterval(interval);
         }
         const currentTime = Date.now();
         const elapsedTime = currentTime - startTime;
         setElapsedTime(elapsedTime);
-      }
-    }, 1000);
+      }, 1000);
+    }
     return () => {
       clearInterval(interval);
       setElapsedTime(0);
     };
-  }, [startTime, handleSaveCompletedGame]);
+  }, [startTime]);
+
+  /* Saves the completed game. */
+  useEffect(() => {
+    if (isGameFinished.current && !hasSavedGame.current) {
+      handleSaveCompletedGame();
+      hasSavedGame.current = true;
+    }
+  }, [handleSaveCompletedGame]);
 
   /* Checks if it is possible to send any card(s) to the foundation. */
   useEffect(() => {
