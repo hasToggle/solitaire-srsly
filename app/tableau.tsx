@@ -10,7 +10,7 @@ export default function Tableau() {
     tableau: { cards: tableauCards, handleSelection, handleSendToFoundation },
   } = useGameState();
   return (
-    <div className="col-span-6 col-start-2 grid grid-cols-7 gap-40">
+    <div className="col-span-7 mt-2 grid grid-cols-7 gap-1">
       {tableauCards.map((cardStack, stackIndex) => (
         <Stack key={stackIndex}>
           {cardStack.length === 0 && (

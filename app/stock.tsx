@@ -14,7 +14,7 @@ export default function Stock() {
     handleDrawCard,
   } = useGameState();
   return (
-    <div className="col-span-6 col-start-7 flex items-start justify-center gap-7">
+    <div className="col-span-2 grid grid-cols-2 gap-1">
       <div className="mt-5">
         {leftStack.length ? (
           <Card

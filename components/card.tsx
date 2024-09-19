@@ -23,9 +23,9 @@ export default function Card({
   }
 
   return (
-    <p
+    <div
       className={clsx(
-        "flex h-56 w-36 select-none items-center justify-center rounded-lg border-4 border-gray-200 bg-gray-100 pb-12 shadow-md",
+        "flex h-20 w-12 select-none items-center justify-center overflow-hidden rounded-lg border-4 border-gray-200 bg-gray-100 pb-6 shadow-md sm:h-24 sm:w-16 md:h-32 md:w-20 lg:h-40 lg:w-24 xl:h-56 xl:w-36",
         className,
         {
           "text-red-600":
@@ -45,17 +45,17 @@ export default function Card({
     >
       {cardToDisplay?.suit.display}
       {cardToDisplay?.rank.display}
-    </p>
+    </div>
   );
 }
 
 export function CardBack(props: React.HTMLProps<HTMLParagraphElement>) {
   return (
     <p
-      className="my-auto flex h-56 w-36 select-none items-center justify-center rounded-lg border-4 border-sky-400 bg-sky-700 pb-1 shadow-md"
+      className="my-auto flex h-20 w-12 select-none items-center justify-center overflow-hidden rounded-lg border-4 border-sky-400 bg-sky-700 pb-6 shadow-md sm:h-24 sm:w-16 md:h-32 md:w-20 lg:h-40 lg:w-24 xl:h-56 xl:w-36"
       {...props}
     >
-      <span className="text-9xl">🎴</span>
+      <span className="md:text-5xl lg:text-7xl xl:text-9xl">🎴</span>
     </p>
   );
 }
