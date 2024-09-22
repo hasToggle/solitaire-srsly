@@ -12,7 +12,7 @@ export default function Foundation() {
       {foundationCards.map((cardStack, cardIndex) => (
         <Card
           key={cardIndex}
-          className={"text-4xl"}
+          className={"text-xl md:text-2xl lg:text-4xl"}
           card={cardStack[cardStack.length - 1]}
           onClick={() =>
             handleSelection(cardIndex, Math.max(0, cardStack.length - 1))

@@ -20,7 +20,7 @@ export default function Tableau() {
             <Card
               key={cardIndex}
               card={card}
-              className={"items-baseline text-2xl"}
+              className={"items-baseline text-base sm:text-lg md:text-xl"}
               onClick={() => handleSelection(stackIndex, cardIndex)}
               onDoubleClick={() =>
                 handleSendToFoundation(stackIndex, cardIndex)

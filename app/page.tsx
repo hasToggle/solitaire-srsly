@@ -5,7 +5,7 @@ import Footer from "./footer";
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen">
+    <div className="min-h-screen sm:pt-10">
       <main className="grid-cols-13 container mx-auto grid gap-1 p-2">
         <Foundation />
         <Stock />

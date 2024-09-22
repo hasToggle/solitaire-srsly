@@ -55,7 +55,9 @@ export function CardBack(props: React.HTMLProps<HTMLParagraphElement>) {
       className="my-auto flex h-20 w-12 select-none items-center justify-center overflow-hidden rounded-lg border-4 border-sky-400 bg-sky-700 pb-6 shadow-md sm:h-24 sm:w-16 md:h-32 md:w-20 lg:h-40 lg:w-24 xl:h-56 xl:w-36"
       {...props}
     >
-      <span className="md:text-5xl lg:text-7xl xl:text-9xl">🎴</span>
+      <span className="text-3xl sm:text-5xl md:text-6xl lg:text-8xl xl:text-9xl">
+        🎴
+      </span>
     </p>
   );
 }
