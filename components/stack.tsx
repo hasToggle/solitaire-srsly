@@ -7,8 +7,8 @@ export default function Stack({ children }: { children?: React.ReactNode }) {
       {childrenArray.map((child, index) => (
         <div
           key={index}
-          className="absolute"
-          style={{ top: `${index * 32}px` }}
+          className="card absolute"
+          style={{ "--offset": index } as React.CSSProperties}
         >
           {child}
         </div>
