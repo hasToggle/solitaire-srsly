@@ -7,3 +7,31 @@
     text-wrap: balance;
   }
 }
+
+.card {
+  top: calc(var(--offset) * 32px);
+}
+
+@media (max-width: 1280px) {
+  .card {
+    top: calc(var(--offset) * 24px);
+  }
+}
+
+@media (max-width: 1024px) {
+  .card {
+    top: calc(var(--offset) * 22px);
+  }
+}
+
+@media (max-width: 768px) {
+  .card {
+    top: calc(var(--offset) * 20px);
+  }
+}
+
+@media (max-width: 640px) {
+  .card {
+    top: calc(var(--offset) * 16px);
+  }
+}

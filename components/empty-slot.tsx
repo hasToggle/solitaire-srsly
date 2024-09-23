@@ -4,7 +4,7 @@ export default function EmptySlot(
   return (
     <p
       {...props}
-      className="flex h-56 w-36 select-none items-center justify-center rounded-lg border-2 border-dotted border-sky-500 bg-sky-200 pb-12 pt-4 shadow-md"
+      className="flex h-20 w-12 select-none items-center justify-center overflow-hidden rounded-lg border-4 border-dotted border-sky-500 bg-sky-200 pb-6 pt-4 shadow-md sm:h-24 sm:w-16 md:h-32 md:w-20 lg:h-40 lg:w-24 xl:h-56 xl:w-36"
     ></p>
   );
 }

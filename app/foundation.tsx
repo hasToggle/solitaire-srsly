@@ -8,11 +8,11 @@ export default function Foundation() {
     foundation: { cards: foundationCards, handleSelection },
   } = useGameState();
   return (
-    <div className="col-span-5 col-start-2 grid grid-cols-4 gap-16">
+    <div className="col-span-4 grid grid-cols-4 gap-1">
       {foundationCards.map((cardStack, cardIndex) => (
         <Card
           key={cardIndex}
-          className={"text-4xl"}
+          className={"text-xl md:text-2xl lg:text-4xl"}
           card={cardStack[cardStack.length - 1]}
           onClick={() =>
             handleSelection(cardIndex, Math.max(0, cardStack.length - 1))

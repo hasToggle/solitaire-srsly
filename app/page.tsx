@@ -5,8 +5,8 @@ import Footer from "./footer";
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen">
-      <main className="grid grid-cols-12 gap-14 p-24">
+    <div className="min-h-screen sm:pt-10">
+      <main className="grid-cols-13 container mx-auto grid gap-1 p-2">
         <Foundation />
         <Stock />
         <Tableau />
