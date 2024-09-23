@@ -444,6 +444,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     setGameState(() => createInitialState(shuffleDeck(ids)));
     handleGameStart();
     setStartTime(null);
+    hasSavedGame.current = false;
   };
 
   /* Object for easy consumption of custom-tailored functions. */
